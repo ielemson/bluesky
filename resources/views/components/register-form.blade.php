@@ -5,45 +5,55 @@
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     <span><i class="fi-rs-cross"></i></span>
                 </button>
+
                 <div class="row g-0">
                     <div class="col-sm-4">
                         <div class="background_bg h-100" data-img-src="{{ asset('assets/imgs/popup_img.png') }}">
                         </div>
                     </div>
 
-                    <div class="col-sm-8 p-2">
+                    <div class="col-sm-8 p-3">
                         <div class="popup_content">
                             <div class="popup-text text-center mb-3">
                                 <div class="heading_s4">
-                                    <h4>{{ gtrans('New User Registration') }}</h4>
+                                    <h4>Create Your Bluesky Mart Account</h4>
                                 </div>
+                                <p class="text-muted small mb-0">
+                                    Join Bluesky Mart today and enjoy a faster, easier, and more personalized shopping experience.
+                                </p>
                             </div>
 
                             {{-- Registration Form --}}
                             <form id="registerForm" method="POST" data-parsley-validate>
                                 @csrf
+
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <div class="form-group mb-3">
                                             <input type="text" name="contact" class="form-control" required
-                                                placeholder="{{ gtrans('Email or Phone') }}">
+                                                placeholder="Email address or Phone number"
+                                                data-parsley-required-message="Please enter your email or phone number">
                                         </div>
                                     </div>
 
                                     <div class="col-sm-6">
                                         <div class="form-group mb-3">
                                             <input type="text" name="nickname" required class="form-control"
-                                                placeholder="{{ gtrans('Enter Nickname') }}">
+                                                placeholder="Choose a nickname"
+                                                data-parsley-required-message="Please enter a nickname">
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="form-group mb-3 d-flex align-items-center">
                                     <input type="text" name="verification_code" required class="form-control me-2"
-                                        placeholder="{{ gtrans('Enter verification code') }}">
+                                        placeholder="Enter verification code"
+                                        data-parsley-required-message="Please enter the verification code">
                                     <span id="captcha-code" class="border px-3 py-2 rounded bg-light fw-bold"></span>
                                     <button type="button" id="reloadCaptcha"
-                                        class="btn btn-outline-secondary ms-2 btn-sm">↻</button>
+                                        class="btn btn-outline-secondary ms-2 btn-sm" aria-label="Reload verification code">
+                                        ↻
+                                    </button>
                                 </div>
 
                                 <div class="row">
@@ -54,8 +64,10 @@
                                                 class="linearicons-eye toggle-reg-password position-absolute start-0 top-50 translate-middle-y ms-3"
                                                 style="cursor: pointer;"></span>
                                             <input type="password" name="password" id="regPassword" required
-                                                class="form-control ps-5" placeholder="{{ gtrans('Enter password') }}"
-                                                data-parsley-minlength="6">
+                                                class="form-control ps-5"
+                                                placeholder="Create password"
+                                                data-parsley-minlength="6"
+                                                data-parsley-minlength-message="Password must be at least 6 characters">
                                         </div>
                                     </div>
 
@@ -66,8 +78,10 @@
                                                 class="linearicons-eye toggle-reg-password position-absolute start-0 top-50 translate-middle-y ms-3"
                                                 style="cursor: pointer;"></span>
                                             <input type="password" name="password_confirmation" required
-                                                class="form-control ps-5" placeholder="{{ gtrans('Confirm password') }}"
-                                                data-parsley-equalto="#regPassword">
+                                                class="form-control ps-5"
+                                                placeholder="Confirm password"
+                                                data-parsley-equalto="#regPassword"
+                                                data-parsley-equalto-message="Passwords do not match">
                                         </div>
                                     </div>
                                 </div>
@@ -75,18 +89,28 @@
                                 <div class="form-group mb-3">
                                     <button type="submit" id="registerBtn"
                                         class="btn btn-fill-out btn-block text-uppercase rounded-0">
-                                        {{ gtrans('Register') }}
+                                        Create Account
                                     </button>
                                 </div>
                             </form>
 
                             <div class="text-center">
-                                <p class="small">
-                                    {{ gtrans('Already have an account?') }}
+                                <p class="small mb-1">
+                                    Already have an account?
                                     <a href="javascript:;" data-bs-target="#loginModal" data-bs-toggle="modal"
-                                        data-bs-dismiss="modal">
-                                        {{ gtrans('Go to login') }}
-                                    </a><br>
+                                        data-bs-dismiss="modal" class="fw-bold text-primary">
+                                        Login here
+                                    </a>
+                                </p>
+                            </div>
+
+                            <div class="text-center mt-2">
+                                <p class="small text-muted">
+                                    By creating an account, you agree to Bluesky Mart’s
+                                    <a href="#" class="text-primary">Terms of Use</a>,
+                                    <a href="#" class="text-primary">Privacy Policy</a>,
+                                    and
+                                    <a href="#" class="text-primary">Account Deletion Policy</a>.
                                 </p>
                             </div>
                         </div>

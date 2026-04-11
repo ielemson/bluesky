@@ -12,7 +12,7 @@
         {{-- MIDDLE HEADER --}}
         @include('partials.header')
 
-        @include('partials.mobile_header')
+        {{-- @include('partials.mobile_header') --}}
     </header>
 @endsection
 @include('partials.home_slider')

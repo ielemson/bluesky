@@ -22,25 +22,24 @@
 
                     <div class="header-action-right">
                         <div class="header-action-2">
-                           <div class="header-action-icon-2">
+                           {{-- <div class="header-action-icon-2">
                             <a href="javascript:;" class="wishlist-trigger">
-                                <img class="svgInject" alt="wishlist" src="{{ asset('assets/imgs/theme/icons/icon-heart.svg') }}">
-                                <span class="pro-count blue wishlist_count">0</span>
+                                <img class="svgInject" alt="wishlist" src="{{ asset('assets/imgs/theme/icons/icon-user-add.svg') }}">
+                              
                             </a>
-                        </div>
+                        </div> --}}
 
                             <div class="header-action-icon-2">
-                                <a class="mini-cart-icon" href="">
-                                    <img alt="cart" src="{{ asset('assets/imgs/theme/icons/icon-cart.svg') }}">
-                                    <span class="pro-count blue cart_count">{{ \Cart::getContent()->count() }}</span>
-                                </a>
-
+                                {{-- <a href="javascript:;" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                    <img alt="cart" src="{{ asset('assets/imgs/theme/icons/icon-user-add.svg') }}">
+                                </a> --}}
+{{-- 
                                 <div class="cart-dropdown-wrap cart-dropdown-hm2">
                                     @include('components.cart-dropdown', [
                                         'cartItems' => \Cart::getContent(),
                                         'cartTotal' => \Cart::getTotal(),
                                     ])
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                     </div>
@@ -162,15 +161,15 @@
                                 <li>
                                     <a class="active" href="{{ route('home') }}">{{ gtrans('Home') }}</a>
                                 </li>
-                                <li>
+                                {{-- <li>
                                     <a href="{{ route('home') }}">{{ gtrans('About') }}</a>
-                                </li>
+                                </li> --}}
                                 <li>
                                     <a href="{{ route('page.products.shop') }}">{{ gtrans('Shop') }}</a>
                                 </li>
-                                <li>
+                                {{-- <li>
                                     <a href="#">{{ gtrans('Contact') }}</a>
-                                </li>
+                                </li> --}}
                             </ul>
                         </nav>
                     </div>
@@ -179,29 +178,15 @@
                
 
                 <div class="header-action-right d-block d-lg-none">
-                    <div class="header-action-2">
-                        <div class="header-action-icon-2">
-                            <a href="#">
-                                <img alt="wishlist" src="{{ asset('assets/imgs/theme/icons/icon-heart.svg') }}">
-                                <span class="pro-count white">0</span>
-                            </a>
-                        </div>
-
-                        <div class="header-action-icon-2">
-                        <a class="mini-cart-icon" href="javascript:;">
-                            <img alt="cart" src="{{ asset('assets/imgs/theme/icons/icon-cart.svg') }}">
-                            <span class="pro-count white cart_count">{{ \Cart::getContent()->sum('quantity') }}</span>
-                        </a>
-                    </div>
-
-                        <div class="header-action-icon-2 d-block d-lg-none">
-                            <button class="burger-icon burger-icon-white border-0 bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenuWrap" aria-expanded="false">
-                                <span class="burger-icon-top"></span>
-                                <span class="burger-icon-mid"></span>
-                                <span class="burger-icon-bottom"></span>
-                            </button>
-                        </div>
-                    </div>
+                   
+                        
+             <div class="header-action-icon-2">
+    <a href="javascript:;" data-bs-toggle="modal" data-bs-target="#loginModal" class="d-flex align-items-center">
+        <img alt="Account" width="20" height="20" src="{{ asset('assets/imgs/theme/icons/icon-user.svg') }}">
+        <span class="ms-1 small fw-bold">Account</span>
+    </a>
+</div>
+                   
                 </div>
 
             </div>

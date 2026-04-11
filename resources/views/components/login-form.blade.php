@@ -10,66 +10,74 @@
                         <div class="background_bg h-100" data-img-src="{{ asset("assets/imgs/popup_img.png") }}">
                         </div>
                     </div>
-                    <div class="col-sm-8 p-2">
+                    <div class="col-sm-8 p-3">
                         <div class="popup_content">
+                            
+                            <!-- Heading -->
                             <div class="popup-text text-center mb-3">
                                 <div class="heading_s4">
-                                    <h4> {{ gtrans('New User Registration') }}</h4>
+                                    <h4>Welcome Back to Bluesky Mart</h4>
                                 </div>
+                                <p class="text-muted small mb-0">
+                                    Shop smarter, faster, and more conveniently. Log in to continue.
+                                </p>
                             </div>
-                            {{-- Registration Form --}}
+
+                            {{-- Login Form --}}
                             <form id="loginForm" method="POST" data-parsley-validate>
                                 @csrf
-                                <!-- Email/Phone Input -->
+
+                                <!-- Email/Phone -->
                                 <div class="form-group mb-3 position-relative">
                                     <input type="text" name="contact" class="form-control" required
-                                        placeholder="Email or Phone"
-                                        data-parsley-required-message="Enter your email or phone">
+                                        placeholder="Email address or Phone number"
+                                        data-parsley-required-message="Please enter your email or phone number">
                                     <small class="error-text text-danger"></small>
                                 </div>
-                                <!-- Password Input with Eye Icon -->
+
+                                <!-- Password -->
                                 <div class="form-group mb-3 position-relative">
                                     <span
                                         class="linearicons-eye toggle-password position-absolute start-0 top-50 translate-middle-y ms-3"
                                         style="cursor: pointer;"></span>
                                     <input type="password" name="password" required class="form-control ps-5"
-                                        placeholder="Enter password" data-parsley-minlength="6">
-                                    {{-- <input type="hidden" name="redirect_to" id="loginRedirectTo"> --}}
+                                        placeholder="Enter your password"
+                                        data-parsley-minlength="6"
+                                        data-parsley-minlength-message="Password must be at least 6 characters">
                                     <small class="error-text text-danger"></small>
                                 </div>
 
-                                <!-- Submit Button -->
+                                <!-- Submit -->
                                 <div class="form-group mb-3">
                                     <button type="submit" id="loginBtn"
                                         class="btn btn-fill-out btn-block text-uppercase rounded-0">
-                                        Login
+                                        Login to Account
                                     </button>
                                 </div>
                             </form>
+
+                            <!-- Register Link -->
                             <div class="text-center">
-                                <p class="small">
-
-                                    {{ gtrans("Don't have an account?") }}
+                                <p class="small mb-1">
+                                    Don’t have an account?
                                     <a href="javascript:;" data-bs-target="#registerModal" data-bs-toggle="modal"
-                                        data-bs-dismiss="modal">
-
-                                        {{ gtrans('New User Registration') }}
+                                        data-bs-dismiss="modal" class="fw-bold text-primary">
+                                        Create one now
                                     </a>
                                 </p>
                             </div>
-                            <div class="text-center mt-2">
-                                <p class="small">
 
-                                    {{ gtrans('By continuing you agree to') }}
-                                    <a href="#" class="text-primary"> {{ gtrans('terms of use') }}</a>,
-                                    <a href="#"
-                                        class="text-primary">{{ gtrans('Personal Information Privacy Policy') }}</a>
-                                    {{ gtrans('and') }}
-                                    <a href="#" class="text-primary">
-                                        {{ gtrans('Account cancellation/deletion guide') }}</a>
-                                    {{ gtrans('of') }}<strong>TiKi INT</strong>.
+                            <!-- Terms -->
+                            <div class="text-center mt-2">
+                                <p class="small text-muted">
+                                    By continuing, you agree to Bluesky Mart’s 
+                                    <a href="#" class="text-primary">Terms of Use</a>, 
+                                    <a href="#" class="text-primary">Privacy Policy</a>, 
+                                    and 
+                                    <a href="#" class="text-primary">Account Deletion Policy</a>.
                                 </p>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -77,6 +85,8 @@
         </div>
     </div>
 </div>
+
+
 @push('scripts')
     <script>
         $(document).ready(function() {

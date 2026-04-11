@@ -52,7 +52,8 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 d-md-none d-lg-block">
+            <!-- ✅ FIX APPLIED HERE -->
+            <div class="col-lg-3 d-none d-lg-block">
                 <div class="banner-img banner-1 wow fadeIn animated home-3">
                     <img class="border-radius-10" src="{{ asset('assets/imgs/banner/banner-5.jpg') }}" alt="Bluesky Mart Accessories">
                     <div class="banner-text">
@@ -75,6 +76,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </section>
