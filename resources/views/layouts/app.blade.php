@@ -2,32 +2,58 @@
 <html class="no-js" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-    <!-- Basic Meta -->
+    {{-- Basic --}}
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="author" content="Bluesky Mart">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- CSRF -->
+    <meta name="author" content="Bluesky Mart">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <!-- Title -->
-    <title>@yield('title', 'Bluesky Mart')</title>
-    <!-- SEO Meta -->
-    <meta name="description" content="@yield('meta_description', 'Shop quality products at Bluesky Mart – electronics, fashion, home essentials and more.')">
-    <meta name="keywords" content="@yield('meta_keywords', 'ecommerce, online store, shopping, fashion, electronics, nigeria')">
-    <!-- Open Graph (Social Sharing) -->
-    <meta property="og:title" content="@yield('og_title', 'Bluesky Mart')">
-    <meta property="og:description" content="@yield('og_description', 'Shop quality products at Bluesky Mart.')">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="@yield('og_image', asset('assets/imgs/favicon.png'))">
-    <!-- Favicon -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/imgs/favicon.png') }}">
 
-          <!-- Latest Bootstrap min CSS -->
+    @php
+        $defaultTitle = 'Bluesky Mart';
+        $defaultDescription = 'Shop quality products at Bluesky Mart – electronics, fashion, home essentials and more.';
+        $defaultKeywords = 'ecommerce, online store, shopping, fashion, electronics, nigeria';
+        $defaultImage = asset('assets/imgs/favicon.png');
+        $currentUrl = url()->current();
+    @endphp
+
+    {{-- Title --}}
+    <title>@yield('title', $defaultTitle)</title>
+
+    {{-- SEO --}}
+    <meta name="description" content="@yield('meta_description', $defaultDescription)">
+    <meta name="keywords" content="@yield('meta_keywords', $defaultKeywords)">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ $currentUrl }}">
+
+    {{-- Open Graph --}}
+    <meta property="og:site_name" content="Bluesky Mart">
+    <meta property="og:title" content="@yield('og_title', View::yieldContent('title', $defaultTitle))">
+    <meta property="og:description" content="@yield('og_description', View::yieldContent('meta_description', $defaultDescription))">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ $currentUrl }}">
+    <meta property="og:image" content="@yield('og_image', $defaultImage)">
+    <meta property="og:image:secure_url" content="@yield('og_image', $defaultImage)">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+
+    {{-- Twitter --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('twitter_title', View::yieldContent('og_title', View::yieldContent('title', $defaultTitle)))">
+    <meta name="twitter:description" content="@yield('twitter_description', View::yieldContent('og_description', View::yieldContent('meta_description', $defaultDescription)))">
+    <meta name="twitter:image" content="@yield('twitter_image', View::yieldContent('og_image', $defaultImage))">
+
+    {{-- Favicon --}}
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/imgs/favicon.png') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('assets/imgs/favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('assets/imgs/favicon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('assets/imgs/favicon.png') }}">
+
+    {{-- CSS --}}
     <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
-    
-    <!-- CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/main.css') }}">
+</head>
   
     <!-- Optional Page Styles -->
     @stack('styles')
