@@ -7,8 +7,10 @@ use Illuminate\Http\Request;
 use App\Models\PaymentWallet;
 use App\Models\WalletDeposit;
 use App\Models\UserWallet;
+use App\Models\PayoutWalletOption;
+use App\Models\UserPayoutWallet;
+use Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 class UserDashboardController extends Controller
 {
     
@@ -85,4 +87,67 @@ public function vendorbalance()
 
     return view('customer.profile', compact('user'));
 }
+
+
+public function withdrawalMethods(Request $request)
+{
+    $methods = collect([
+        [
+            'id' => 'bank_transfer',
+            'name' => 'Online Banking Withdrawal',
+            'type' => 'bank',
+            'currency' => null,
+            'chain' => null,
+        ]
+    ]);
+
+    $cryptoOptions = \App\Models\PayoutWalletOption::query()
+        ->where('is_active', true)
+        ->orderBy('currency')
+        ->orderBy('chain')
+        ->get()
+        ->map(function ($option) {
+            return [
+                'id' => (string) $option->id,
+                'name' => $option->currency . '-' . $option->chain,
+                'type' => 'crypto',
+                'currency' => $option->currency,
+                'chain' => $option->chain,
+            ];
+        });
+
+    return response()->json(
+        $methods->merge($cryptoOptions)->values()
+    );
+}
+
+    public function withdrawalAddresses($option)
+    {
+        $user = Auth::user();
+
+        // Bank method does not need wallet addresses
+        if ((string) $option === 'bank_transfer') {
+            return response()->json([]);
+        }
+
+        $addresses = UserPayoutWallet::query()
+            ->where('user_id', $user->id)
+            ->where('payout_wallet_option_id', $option)
+            ->orderByDesc('is_default')
+            ->orderByDesc('id')
+            ->get(['id', 'wallet_address', 'is_default'])
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'wallet_address' => $item->wallet_address,
+                    'is_default' => (bool) $item->is_default,
+                    'display' => $item->is_default
+                        ? 'Default - ' . $item->wallet_address
+                        : $item->wallet_address,
+                ];
+            })
+            ->values();
+
+        return response()->json($addresses);
+    }
 }

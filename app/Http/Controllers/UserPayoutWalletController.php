@@ -2,99 +2,139 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\PayoutWalletOption;
 use App\Models\UserPayoutWallet;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UserPayoutWalletController extends Controller
 {
-    //  public function index(Request $request)
-    // {
-    //     $user   = $request->user();
-    //     $wallets = $user->payoutWallets()->with('option')->get(); // hasMany
-    //     $options = PayoutWalletOption::where('is_active', true)
-    //         ->orderBy('currency')->orderBy('chain')->get();
-
-    //     return view("customer.wallet.wallet-list", compact('wallets', 'options'));
-    // }
-
-    // public function store(Request $request)
-    // {
-    //     $data = $request->validate([
-    //         'payout_wallet_option_id' => ['required', 'exists:payout_wallet_options,id'],
-    //         'address'                 => ['required', 'string', 'max:255'],
-    //     ]);
-
-    //     $wallet = UserPayoutWallet::create([
-    //         'user_id'                => $request->user()->id,
-    //         'payout_wallet_option_id'=> $data['payout_wallet_option_id'],
-    //         'address'                => $data['address'],
-    //     ]);
-
-    //     return response()->json([
-    //         'status'  => 'ok',
-    //         'message' => 'Payout wallet added successfully.',
-    //         'wallet'  => $wallet->load('option'),
-    //     ]);
-    // }
-
-    public function index(Request $request)
+    public function index()
     {
-        $user     = $request->user();
-        $wallets  = $user->payoutWallets()->with('option')->get();
-        $options  = PayoutWalletOption::where('is_active', true)
-            ->orderBy('currency')->orderBy('chain')->get();
+        $user = Auth::user();
 
-        return view("customer.wallet.wallet-list", compact('wallets', 'options'));
+        $wallets = UserPayoutWallet::with('walletOption')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->get();
+
+        $walletOptions = PayoutWalletOption::query()
+            ->where('is_active', true)
+            ->orderBy('currency')
+            ->orderBy('chain')
+            ->get();
+
+        return view('customer.wallet.index', compact('wallets', 'walletOptions'));
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'payout_wallet_option_id' => ['required', 'exists:payout_wallet_options,id'],
-            'address'                 => ['required', 'string', 'max:255'],
-        ]);
-
-        $wallet = UserPayoutWallet::create([
-            'user_id'                => $request->user()->id,
-            'payout_wallet_option_id'=> $data['payout_wallet_option_id'],
-            'address'                => $data['address'],
-        ]);
-
-        return response()->json([
-            'status'  => 'ok',
-            'message' => 'Payout wallet added successfully.',
-            'wallet'  => $wallet->load('option'),
-        ]);
-    }
-
-    public function update(Request $request, UserPayoutWallet $wallet)
-    {
-        $this->authorize('update', $wallet); // optional
+        $user = Auth::user();
 
         $data = $request->validate([
             'payout_wallet_option_id' => ['required', 'exists:payout_wallet_options,id'],
-            'address'                 => ['required', 'string', 'max:255'],
+            'wallet_address' => ['required', 'string', 'max:255'],
+            'is_default' => ['nullable', 'boolean'],
         ]);
 
-        $wallet->update($data);
+        $data['wallet_address'] = trim($data['wallet_address']);
+        $isDefault = $request->boolean('is_default');
 
-        return response()->json([
-            'status'  => 'ok',
-            'message' => 'Payout wallet updated successfully.',
-            'wallet'  => $wallet->load('option'),
-        ]);
+        $option = PayoutWalletOption::query()
+            ->where('id', $data['payout_wallet_option_id'])
+            ->where('is_active', true)
+            ->first();
+
+        if (!$option) {
+            return redirect()
+                ->route('customer.wallets.index')
+                ->withErrors([
+                    'payout_wallet_option_id' => 'The selected wallet option is invalid or inactive.',
+                ])
+                ->withInput();
+        }
+
+        $existingWallet = UserPayoutWallet::query()
+            ->where('user_id', $user->id)
+            ->where('payout_wallet_option_id', $option->id)
+            ->where('wallet_address', $data['wallet_address'])
+            ->first();
+
+        if ($existingWallet) {
+            if ($isDefault && !$existingWallet->is_default) {
+                DB::transaction(function () use ($user, $existingWallet) {
+                    UserPayoutWallet::where('user_id', $user->id)->update(['is_default' => false]);
+                    $existingWallet->update(['is_default' => true]);
+                });
+
+                return redirect()
+                    ->route('customer.wallets.index')
+                    ->with('status', 'Wallet already existed and has been set as default.');
+            }
+
+            return redirect()
+                ->route('customer.wallets.index')
+                ->withErrors([
+                    'wallet_address' => 'This wallet address has already been added for the selected currency and chain.',
+                ])
+                ->withInput();
+        }
+
+        try {
+            DB::transaction(function () use ($user, $option, $data, $isDefault) {
+                if ($isDefault) {
+                    UserPayoutWallet::where('user_id', $user->id)->update(['is_default' => false]);
+                }
+
+                UserPayoutWallet::create([
+                    'user_id' => $user->id,
+                    'payout_wallet_option_id' => $option->id,
+                    'wallet_address' => $data['wallet_address'],
+                    'is_default' => $isDefault,
+                ]);
+            });
+        } catch (QueryException $e) {
+            if ((int) $e->getCode() === 23000) {
+                return redirect()
+                    ->route('customer.wallets.index')
+                    ->withErrors([
+                        'wallet_address' => 'This wallet address has already been added for the selected currency and chain.',
+                    ])
+                    ->withInput();
+            }
+
+            throw $e;
+        }
+
+        return redirect()
+            ->route('customer.wallets.index')
+            ->with('status', 'Wallet payout option added successfully.');
     }
 
-    public function destroy(Request $request, UserPayoutWallet $wallet)
+    public function destroy(UserPayoutWallet $wallet)
     {
-        $this->authorize('delete', $wallet); // optional
+        abort_if($wallet->user_id !== Auth::id(), 403);
 
         $wallet->delete();
 
-        return response()->json([
-            'status'  => 'ok',
-            'message' => 'Payout wallet deleted successfully.',
-        ]);
+        return redirect()
+            ->route('customer.wallets.index')
+            ->with('status', 'Wallet removed successfully.');
+    }
+
+    public function setDefault(UserPayoutWallet $wallet)
+    {
+        abort_if($wallet->user_id !== Auth::id(), 403);
+
+        DB::transaction(function () use ($wallet) {
+            UserPayoutWallet::where('user_id', Auth::id())->update(['is_default' => false]);
+            $wallet->update(['is_default' => true]);
+        });
+
+        return redirect()
+            ->route('customer.wallets.index')
+            ->with('status', 'Default wallet updated successfully.');
     }
 }

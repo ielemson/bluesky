@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\UserMessage;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -64,11 +66,31 @@ class User extends Authenticatable
         return $this->hasOne(UserPayoutWallet::class);
     }
 
-    public function payoutWallets()
-    {
-        return $this->hasMany(UserPayoutWallet::class);
-    }
+    // public function payoutWallets()
+    // {
+    //     return $this->hasMany(UserPayoutWallet::class);
+    // }
 
+    public function payoutWallets()
+        {
+            return $this->hasMany(\App\Models\UserPayoutWallet::class);
+        }
+
+
+        public function defaultWallet()
+        {
+            return $this->hasOne(UserWallet::class)->where('currency', 'USD');
+        }
+
+        public function messages(): HasMany
+{
+    return $this->hasMany(UserMessage::class);
+}
+
+public function unreadMessages(): HasMany
+{
+    return $this->hasMany(UserMessage::class)->where('is_read', false);
+}
     /**
      * NOTE: this name suggests "user delivery addresses", but model is VendorDeliveryAddress.
      * If these are actually user addresses, consider renaming the model/table/foreign key.

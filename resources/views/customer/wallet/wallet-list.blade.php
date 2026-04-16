@@ -212,7 +212,7 @@
                 }
 
                 $.ajax({
-                    url: '{{ route('user.wallet.store') }}',
+                    url: '{{ route('customer.wallets.store') }}',
                     method: 'POST',
                     data: $addForm.serialize(),
                     headers: {
@@ -258,7 +258,7 @@
                 var walletId = $('#edit_wallet_id').val();
 
                 $.ajax({
-                    url: '{{ route('user.wallet.update', ':id') }}'.replace(':id', walletId),
+                    url: '{{ route('customer.wallets.update', ':id') }}'.replace(':id', walletId),
                     method: 'POST',
                     data: $editForm.serialize(),
                     headers: {
@@ -294,7 +294,7 @@
                     if (!result.isConfirmed) return;
 
                     $.ajax({
-                        url: '{{ route('user.wallet.destroy', ':id') }}'.replace(':id',
+                        url: '{{ route('customer.wallets.destroy', ':id') }}'.replace(':id',
                             walletId),
                         method: 'POST',
                         data: {

@@ -7,10 +7,32 @@ use Illuminate\Database\Eloquent\Model;
 
 class PayoutWalletOption extends Model
 {
-    protected $fillable = ['currency', 'chain', 'is_active'];
+   protected $fillable = [
+        'type',
+        'display_name',
+        'currency',
+        'chain',
+        'is_active'
+    ];
 
-    public function userWallets()
+    // public function userWallets()
+    // {
+    //     return $this->hasMany(UserPayoutWallet::class);
+    // }
+
+    //  public function userWallets()
+    // {
+    //     return $this->hasMany(UserPayoutWallet::class, 'payout_wallet_option_id');
+    // }
+
+      public function userWallets()
     {
         return $this->hasMany(UserPayoutWallet::class);
     }
+    
+    public function withdrawalRequests()
+{
+    return $this->hasMany(WithdrawalRequest::class);
+}
+
 }

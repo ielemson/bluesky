@@ -38,13 +38,37 @@
                         </div>
                         <div class="card-body">
 
-                            <div class="row">
+                            <div class="form-group mb-3">
+                                <label for="type">{{ gtrans('Option type') }} *</label>
+                                <select id="type" name="type"
+                                    class="form-control @error('type') is-invalid @enderror"
+                                    required
+                                    data-parsley-required-message="{{ gtrans('Option type is required.') }}">
+                                    <option value="">{{ gtrans('Select option type') }}</option>
+                                    <option value="crypto" {{ old('type', 'crypto') == 'crypto' ? 'selected' : '' }}>
+                                        {{ gtrans('Crypto') }}
+                                    </option>
+                                    <option value="bank" {{ old('type') == 'bank' ? 'selected' : '' }}>
+                                        {{ gtrans('Online Banking') }}
+                                    </option>
+                                </select>
+                                @error('type')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            <div id="bankInfoBox" class="alert alert-info d-none">
+                                <i class="fa fa-info-circle me-1"></i>
+                                {{ gtrans('For online banking, the system will automatically save this option as BANK TRANSFER.') }}
+                            </div>
+
+                            <div class="row" id="cryptoFields">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label for="currency">{{ gtrans('Currency') }} *</label>
                                         <input type="text" id="currency" name="currency"
                                             class="form-control @error('currency') is-invalid @enderror"
-                                            value="{{ old('currency', 'USDT') }}" placeholder="USDT" required
+                                            value="{{ old('currency', 'USDT') }}" placeholder="USDT"
                                             data-parsley-required-message="{{ gtrans('Currency is required.') }}">
                                         @error('currency')
                                             <small class="text-danger">{{ $message }}</small>
@@ -57,7 +81,7 @@
                                         <label for="chain">{{ gtrans('Chain / Network') }} *</label>
                                         <input type="text" id="chain" name="chain"
                                             class="form-control @error('chain') is-invalid @enderror"
-                                            value="{{ old('chain', 'TRC-20') }}" placeholder="TRC-20" required
+                                            value="{{ old('chain', 'TRC-20') }}" placeholder="TRC-20"
                                             data-parsley-required-message="{{ gtrans('Chain / network is required.') }}">
                                         @error('chain')
                                             <small class="text-danger">{{ $message }}</small>
@@ -72,7 +96,7 @@
                                     <span class="text-muted">({{ gtrans('optional') }})</span>
                                 </label>
                                 <textarea id="note" name="note" rows="2" class="form-control @error('note') is-invalid @enderror"
-                                    placeholder="{{ gtrans('Example: Default USDT withdrawal option.') }}">{{ old('note') }}</textarea>
+                                    placeholder="{{ gtrans('Example: Default USDT withdrawal option or Online Banking Withdrawal.') }}">{{ old('note') }}</textarea>
                                 @error('note')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
@@ -117,19 +141,47 @@
             </div>
         </form>
     </div>
-
-
 @endsection
 
 @push('scripts')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    {{-- Parsley --}}
     <script src="https://cdn.jsdelivr.net/npm/parsleyjs@2.9.3/dist/parsley.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/parsleyjs@2.9.3/src/parsley.css"> {{-- or custom --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/parsleyjs@2.9.3/src/parsley.css">
 
-
-    {{-- Toastify --}}
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+    <script>
+        $(document).ready(function () {
+            function toggleOptionTypeFields() {
+                const type = $('#type').val();
+
+                if (type === 'bank') {
+                    $('#cryptoFields').hide();
+                    $('#bankInfoBox').removeClass('d-none');
+
+                    $('#currency').prop('required', false).val('NGN');
+                    $('#chain').prop('required', false).val('BANK_TRANSFER');
+                } else {
+                    $('#cryptoFields').show();
+                    $('#bankInfoBox').addClass('d-none');
+
+                    $('#currency').prop('required', true);
+                    $('#chain').prop('required', true);
+
+                    if (!$('#currency').val() || $('#currency').val() === 'NGN') {
+                        $('#currency').val('USDT');
+                    }
+
+                    if (!$('#chain').val() || $('#chain').val() === 'BANK_TRANSFER') {
+                        $('#chain').val('TRC-20');
+                    }
+                }
+            }
+
+            $('#type').on('change', toggleOptionTypeFields);
+            toggleOptionTypeFields();
+        });
+    </script>
 @endpush

@@ -95,6 +95,9 @@
                             <li><a href="{{ route('admin.wallet-options.index') }}"><i class="icon-Commit"><span
                                             class="path1"></span><span class="path2"></span></i>Payout Option</a>
                             </li>
+                            <li><a href="{{ route('admin.wallet-options.topup') }}"><i class="icon-Commit"><span
+                                            class="path1"></span><span class="path2"></span></i>Wallet Top up</a>
+                            </li>
 
                         </ul>
                     </li>

@@ -101,6 +101,7 @@ class RegisterController extends Controller
     $user->nickname = $request->nickname;
     $user->is_vendor = false;
     $user->name = $request->name;
+    $user->status = "active";
     $user->contact = $contact; // ALWAYS save to contact
     $user->password = Hash::make($request->password);
     $user->save();

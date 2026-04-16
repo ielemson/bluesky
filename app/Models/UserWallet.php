@@ -3,52 +3,38 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserWallet extends Model
 {
     protected $fillable = [
         'user_id',
-        'account_balance',
-        'available_balance',
-        'on_hold',
+        'currency',
+        'balance',
     ];
 
-    public function user()
+    protected $casts = [
+        'balance' => 'decimal:2',
+    ];
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // Optional helpers
     public function credit(float $amount): void
     {
-        $this->increment('account_balance', $amount);
-        $this->increment('available_balance', $amount);
+        $this->increment('balance', $amount);
         $this->refresh();
     }
 
-    public function hold(float $amount): bool
+    public function debit(float $amount): void
     {
-        if ($this->available_balance < $amount) {
-            return false;
+        if ((float) $this->balance < $amount) {
+            throw new \RuntimeException('Insufficient wallet balance.');
         }
 
-        $this->decrement('available_balance', $amount);
-        $this->increment('on_hold', $amount);
+        $this->decrement('balance', $amount);
         $this->refresh();
-
-        return true;
-    }
-
-    public function releaseHold(float $amount): bool
-    {
-        if ($this->on_hold < $amount) {
-            return false;
-        }
-
-        $this->decrement('on_hold', $amount);
-        $this->increment('available_balance', $amount);
-        $this->refresh();
-
-        return true;
     }
 }

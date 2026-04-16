@@ -10,29 +10,64 @@ class PayoutWalletOptionController extends Controller
 {
     public function index()
     {
-        $options = PayoutWalletOption::orderBy('currency')->orderBy('chain')->get();
+        $options = PayoutWalletOption::query()
+            ->orderBy('currency')
+            ->orderBy('chain')
+            ->latest('id')
+            ->get();
 
-        return view("admin.payout.index", compact('options'));
+        return view('admin.payout.index', compact('options'));
     }
 
     public function create()
     {
-        return view("admin.payout.create");
+        return view('admin.payout.create');
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'currency' => ['required', 'string', 'max:10'],
-            'chain'    => ['required', 'string', 'max:20'],
-            'is_active'=> ['boolean'],
+            'type'      => ['required', 'in:crypto,bank'],
+            'currency'  => ['nullable', 'string', 'max:20'],
+            'chain'     => ['nullable', 'string', 'max:50'],
+            'note'      => ['nullable', 'string', 'max:1000'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
+
+        if ($data['type'] === 'bank') {
+            $data['currency'] = 'NGN';
+            $data['chain'] = 'BANK_TRANSFER';
+        } else {
+            $request->validate([
+                'currency' => ['required', 'string', 'max:20'],
+                'chain'    => ['required', 'string', 'max:50'],
+            ]);
+
+            $data['currency'] = strtoupper(trim($data['currency']));
+            $data['chain'] = strtoupper(trim($data['chain']));
+        }
+
+        $data['note'] = $request->filled('note') ? trim($request->note) : null;
+        $data['is_active'] = $request->boolean('is_active');
+
+        $exists = PayoutWalletOption::where('currency', $data['currency'])
+            ->where('chain', $data['chain'])
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withErrors([
+                    'currency' => 'This payout option already exists.',
+                ])
+                ->withInput();
+        }
+
+        unset($data['type']);
 
         PayoutWalletOption::create($data);
 
-        
-
-        return redirect()->route('admin.wallet-options.index')
+        return redirect()
+            ->route('admin.wallet-options.index')
             ->with('status', 'Payout wallet option created.');
     }
 
@@ -44,14 +79,48 @@ class PayoutWalletOptionController extends Controller
     public function update(Request $request, PayoutWalletOption $option)
     {
         $data = $request->validate([
-            'currency' => ['required', 'string', 'max:10'],
-            'chain'    => ['required', 'string', 'max:20'],
-            'is_active'=> ['boolean'],
+            'type'      => ['required', 'in:crypto,bank'],
+            'currency'  => ['nullable', 'string', 'max:20'],
+            'chain'     => ['nullable', 'string', 'max:50'],
+            'note'      => ['nullable', 'string', 'max:1000'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
+
+        if ($data['type'] === 'bank') {
+            $data['currency'] = 'NGN';
+            $data['chain'] = 'BANK_TRANSFER';
+        } else {
+            $request->validate([
+                'currency' => ['required', 'string', 'max:20'],
+                'chain'    => ['required', 'string', 'max:50'],
+            ]);
+
+            $data['currency'] = strtoupper(trim($data['currency']));
+            $data['chain'] = strtoupper(trim($data['chain']));
+        }
+
+        $data['note'] = $request->filled('note') ? trim($request->note) : null;
+        $data['is_active'] = $request->boolean('is_active');
+
+        $exists = PayoutWalletOption::where('currency', $data['currency'])
+            ->where('chain', $data['chain'])
+            ->where('id', '!=', $option->id)
+            ->exists();
+
+        if ($exists) {
+            return back()
+                ->withErrors([
+                    'currency' => 'This payout option already exists.',
+                ])
+                ->withInput();
+        }
+
+        unset($data['type']);
 
         $option->update($data);
 
-        return redirect()->route('admin.wallet-options.index')
+        return redirect()
+            ->route('admin.wallet-options.index')
             ->with('status', 'Payout wallet option updated.');
     }
 

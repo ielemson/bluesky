@@ -79,7 +79,7 @@ class VendorController extends Controller
     public function show($id)
     {
     //    $vendor = Vendor::with([
-    //     'user.wallet',
+    //     'customer.wallets',
     //     'user.orders' => function ($q) {
     //         $q->latest()->take(10);
     //     },
@@ -88,7 +88,7 @@ class VendorController extends Controller
 
     // return view('admin.vendors.show', compact('vendor'));
      $vendor = Vendor::with([
-            'user.wallet',
+            'customer.wallets',
             'user.orders' => function ($q) {
                 $q->latest()->take(10);
             },

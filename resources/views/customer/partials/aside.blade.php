@@ -14,7 +14,7 @@
 
             {{-- User profile block --}}
             <li
-                class="user-profile treeview {{ nav_active(['customer.dashboard', 'vendor.balance', 'user.wallet.index', 'vendor.delivery.index']) }}">
+                class="user-profile treeview {{ nav_active(['customer.dashboard', 'vendor.balance', 'customer.wallets.index', 'vendor.delivery.index']) }}">
                 <a href="{{ route('customer.dashboard') }}">
                     <img src="{{ asset('assets/imgs/user.png') }}" alt="user">
                     <span>
@@ -62,9 +62,39 @@
             <li class="{{ nav_active('customer.dashboard') }}">
                 <a href="{{ route('customer.dashboard') }}">
                     <i class="mdi mdi-view-dashboard"></i>
-                    <span>Dashboard</span>
+                    <span>My Account</span>
                 </a>
             </li>
+              {{-- Vendor section --}}
+            @if (Auth()->user()->is_vendor)
+                <li class="{{ nav_active('customer.products.*') }}">
+                    <a href="{{ route('customer.products.index') }}">
+                        <i class="mdi mdi-view-dashboard"></i>
+                        <span>Wholesale Management</span>
+                    </a>
+                </li>
+
+                <li class="{{ nav_active('vendor.shop.*') }}">
+                    <a href="{{ route("vendor.shop.index") }}">
+                        <i class="mdi mdi-view-dashboard"></i>
+                        <span>Shop Details</span>
+                    </a>
+                </li>
+
+                <li class="{{ nav_active('vendor.listings.*') }}">
+                    <a href="{{ route('vendor.listings.my') }}">
+                        <i class="mdi mdi-view-dashboard"></i>
+                        <span>Product Management</span>
+                    </a>
+                </li>
+            @else
+                <li class="{{ nav_active('vendor.apply_form') }}">
+                    <a href="{{ route('vendor.apply_form') }}">
+                        <i class="mdi mdi-view-dashboard"></i>
+                        <span>Apply for a store</span>
+                    </a>
+                </li>
+            @endif
 
             {{-- Current Balance --}}
             <li class="{{ nav_active('vendor.balance') }}">
@@ -107,8 +137,8 @@
             </li>
 
             {{-- Wallet Management --}}
-            <li class="{{ nav_active('user.wallet.*') }}">
-                <a href="{{ route('user.wallet.index') }}">
+            <li class="{{ nav_active('customer.wallets.*') }}">
+                <a href="{{ route('customer.wallets.index') }}">
                     <i class="mdi mdi-view-dashboard"></i>
                     <span>Wallet Management</span>
                 </a>
@@ -124,42 +154,11 @@
 
             {{-- Internal Message --}}
             <li class="{{ nav_active('customer.messages.*') }}">
-                <a href="{{ route('customer.dashboard') }}">
+                <a href="{{ route('customer.messages.index') }}">
                     <i class="mdi mdi-view-dashboard"></i>
                     <span>Internal Message</span>
                 </a>
             </li>
-
-            {{-- Vendor section --}}
-            @if (Auth()->user()->is_vendor)
-                <li class="{{ nav_active('customer.products.*') }}">
-                    <a href="{{ route('customer.products.index') }}">
-                        <i class="mdi mdi-view-dashboard"></i>
-                        <span>Wholesale Management</span>
-                    </a>
-                </li>
-
-                <li class="{{ nav_active('vendor.shop.*') }}">
-                    <a href="{{ route("vendor.shop.index") }}">
-                        <i class="mdi mdi-view-dashboard"></i>
-                        <span>Shop Details</span>
-                    </a>
-                </li>
-
-                <li class="{{ nav_active('vendor.listings.*') }}">
-                    <a href="{{ route('vendor.listings.my') }}">
-                        <i class="mdi mdi-view-dashboard"></i>
-                        <span>Product Management</span>
-                    </a>
-                </li>
-            @else
-                <li class="{{ nav_active('vendor.apply_form') }}">
-                    <a href="{{ route('vendor.apply_form') }}">
-                        <i class="mdi mdi-view-dashboard"></i>
-                        <span>Apply for a store</span>
-                    </a>
-                </li>
-            @endif
 
         </ul>
     </section>

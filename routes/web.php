@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\PaymentWalletController;
 use App\Http\Controllers\Admin\PayoutWalletOptionController;
 use App\Http\Controllers\Admin\WalletDepositApprovalController;
+use App\Http\Controllers\Admin\AdminWalletTopupController;
 
 // Auth Controllers
 use App\Http\Controllers\Auth\LoginController;
@@ -24,7 +25,6 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductOrderController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserPayoutWalletController;
@@ -33,28 +33,15 @@ use App\Http\Controllers\VendorDeliveryAddressController;
 use App\Http\Controllers\VendorProductController;
 use App\Http\Controllers\VendorShopController;
 use App\Http\Controllers\WalletDepositController;
+use App\Http\Controllers\WalletWithdrawController;
+use App\Http\Controllers\WithdrawalRequestController;
+use App\Http\Controllers\UserMessageController;
 
 /*
 |--------------------------------------------------------------------------
 | NEW LANGUAGE SWITCH (Google Translate)
 |--------------------------------------------------------------------------
 */
-
-// Route::post('/language-switch', function (\Illuminate\Http\Request $request) {
-
-//     $locale = $request->input('locale');
-//     $available = ['en', 'zh', 'fr', 'es'];
-
-//     if (! in_array($locale, $available, true)) {
-//         $locale = 'en';
-//     }
-
-//     session(['app_locale' => $locale]);
-//     app()->setLocale($locale);
-
-//     return back();
-// })->name('lang.switch');
-
 
 Route::post('/language', [LanguageController::class, 'switch'])
     ->name('lang.switch');
@@ -70,9 +57,6 @@ Route::get('/', [PageController::class, 'index'])->name('home');
 Route::view('/shop', 'shop')->name('shop');
 Route::view('/cart', 'cart')->name('cart');
 
-// All Products
-// Route::get('/products/shop', [PageController::class, 'shop'])->name('page.products.shop');
-
 // View all products
 Route::get('/shop/products', [PageController::class, 'shop'])
     ->name('page.products.shop');
@@ -81,11 +65,9 @@ Route::get('/shop/products', [PageController::class, 'shop'])
 Route::get('/products/category/{categorySlug}', [PageController::class, 'shop'])
     ->name('page.products.category');
 
-
-// Product Details
+// Product details
 Route::get('/product/{slug}', [PageController::class, 'product'])
     ->name('page.products.show');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -94,18 +76,17 @@ Route::get('/product/{slug}', [PageController::class, 'product'])
 */
 
 Route::prefix('cart')->group(function () {
-
     Route::get('/', [CartController::class, 'index'])->name('cart.index');
-    Route::post('update', [CartController::class, 'update'])->name('cart.update');
-    Route::post('remove', [CartController::class, 'remove'])->name('cart.remove');
-    Route::post('add-ajax', [CartController::class, 'addAjax'])->name('cart.add.ajax');
-    Route::get('shopping', [CartController::class, 'viewCart'])->name('cart.view');
-    Route::get('wishlist', [CartController::class, 'wishlist'])->name('wishlist.summary');
-    Route::post('update-quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
+    Route::post('/update', [CartController::class, 'update'])->name('cart.update');
+    Route::post('/remove', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/add-ajax', [CartController::class, 'addAjax'])->name('cart.add.ajax');
+    Route::get('/shopping', [CartController::class, 'viewCart'])->name('cart.view');
+    Route::get('/wishlist', [CartController::class, 'wishlist'])->name('wishlist.summary');
+    Route::post('/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
 
     // Checkout
-    Route::get('checkout', [CheckoutController::class, 'index'])->name('checkout');
-    Route::post('checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 });
 
 // AJAX Cart Summary
@@ -116,10 +97,8 @@ Route::get('/cart/summary', function () {
     ]);
 });
 
-// Additional AJAX routes
 Route::get('/cart/dropdown', [CartController::class, 'loadDropdown'])->name('cart.dropdown');
 Route::post('/cart/remove-ajax', [CartController::class, 'removeAjax'])->name('cart.remove.ajax');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -131,7 +110,6 @@ Route::get('captcha/{config?}', function (Captcha $captcha, $config = 'default')
     return $captcha->create($config);
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER AUTHENTICATION
@@ -142,14 +120,18 @@ Route::get('register', [RegisterController::class, 'showRegistrationForm'])->nam
 Route::post('customer-register', [RegisterController::class, 'registerCustomer'])->name('registerCustomer');
 Route::post('customer-login', [LoginController::class, 'loginCustomer'])->name('loginCustomer');
 
-Route::prefix('admin')->group(function () {
+/*
+|--------------------------------------------------------------------------
+| ADMIN ROUTES
+|--------------------------------------------------------------------------
+*/
 
-    Route::get('login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+Route::prefix('admin')->group(function () {
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 
     Route::middleware(['auth', 'role:admin'])->group(function () {
-
-        Route::get('dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 
         /*
         |--------------------------------------------------------------------------
@@ -162,11 +144,11 @@ Route::prefix('admin')->group(function () {
             Route::get('/pending', [VendorController::class, 'pendingApplications'])->name('pending');
             Route::get('/active', [VendorController::class, 'activeVendors'])->name('active');
             Route::get('/suspended', [VendorController::class, 'suspendedVectors'])->name('suspended');
+            Route::get('/stats', [VendorController::class, 'statistics'])->name('stats');
             Route::get('/{id}', [VendorController::class, 'show'])->name('show');
             Route::post('/{id}/approve', [VendorController::class, 'approve'])->name('approve');
             Route::post('/{id}/reject', [VendorController::class, 'reject'])->name('reject');
             Route::get('/{id}/details', [VendorController::class, 'getVendorDetails'])->name('details');
-            Route::get('/stats', [VendorController::class, 'statistics'])->name('stats');
             Route::get('/{vendor}/products', [VendorController::class, 'vendorProducts'])->name('products');
         });
 
@@ -224,13 +206,17 @@ Route::prefix('admin')->group(function () {
             Route::get('/create', [AdminOrderController::class, 'create'])->name('create');
             Route::post('/', [AdminOrderController::class, 'store'])->name('store');
 
-            // AJAX: load products under a selected vendor/shop
             Route::get('/vendor/{vendor}/products', [AdminOrderController::class, 'getVendorProducts'])
                 ->name('vendor.products');
 
-            // optional detail page
             Route::get('/{order}', [AdminOrderController::class, 'show'])->name('show');
         });
+
+        /*
+        |--------------------------------------------------------------------------
+        | PAYMENT WALLETS
+        |--------------------------------------------------------------------------
+        */
 
         Route::prefix('wallet')->name('admin.wallets.')->group(function () {
             Route::get('/', [PaymentWalletController::class, 'index'])->name('index');
@@ -240,6 +226,12 @@ Route::prefix('admin')->group(function () {
             Route::put('/{wallet}', [PaymentWalletController::class, 'update'])->name('update');
             Route::delete('/{wallet}', [PaymentWalletController::class, 'destroy'])->name('destroy');
         });
+
+        /*
+        |--------------------------------------------------------------------------
+        | WALLET DEPOSITS
+        |--------------------------------------------------------------------------
+        */
 
         Route::prefix('deposits')->name('admin.wallet.')->group(function () {
             Route::get('/', [WalletDepositApprovalController::class, 'index'])->name('index');
@@ -285,13 +277,22 @@ Route::prefix('admin')->group(function () {
             Route::post('/clear-image/{key}', [SettingController::class, 'clearImage'])->name('clear-image');
         });
 
-        Route::prefix('admin/wallet-options')->name('admin.wallet-options.')->group(function () {
+        /*
+        |--------------------------------------------------------------------------
+        | PAYOUT WALLET OPTIONS
+        |--------------------------------------------------------------------------
+        */
+
+        Route::prefix('wallet-options')->name('admin.wallet-options.')->group(function () {
             Route::get('/', [PayoutWalletOptionController::class, 'index'])->name('index');
             Route::get('/create', [PayoutWalletOptionController::class, 'create'])->name('create');
             Route::post('/', [PayoutWalletOptionController::class, 'store'])->name('store');
             Route::get('/{option}/edit', [PayoutWalletOptionController::class, 'edit'])->name('edit');
             Route::put('/{option}', [PayoutWalletOptionController::class, 'update'])->name('update');
             Route::delete('/{option}', [PayoutWalletOptionController::class, 'destroy'])->name('destroy');
+
+            Route::get('/wallet/topup', [AdminWalletTopupController::class, 'index'])->name('topup');
+            Route::post('/wallet/topup', [AdminWalletTopupController::class, 'store'])->name('topup.store');
         });
     });
 });
@@ -303,15 +304,8 @@ Route::prefix('admin')->group(function () {
 */
 
 Route::middleware(['auth', 'role:customer'])->group(function () {
-
     Route::get('/user/dashboard', [UserDashboardController::class, 'dashboard'])->name('customer.dashboard');
-
     Route::post('/user/password/change', [UserDashboardController::class, 'update'])->name('customer.password.change');
-
-    // // Profile
-    // Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Vendor application
     Route::get('/user/store/apply', [VendorController::class, 'apply_form'])->name('vendor.apply_form');
@@ -327,40 +321,57 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/vendor/listing/{id}/remove', [VendorProductController::class, 'removeFromListing'])->name('vendor.listing.remove');
     Route::get('/vendor/balance', [UserDashboardController::class, 'vendorbalance'])->name('vendor.balance');
 
-    // Vendor wallet
+    // Deposit wallet
     Route::get('/user/payment-methods', [UserDashboardController::class, 'paymentMethods'])->name('customer.payment-methods');
-    Route::post('/wallet/deposit/ajax', [WalletDepositController::class, 'store'])
-        ->name('wallet.deposit.ajax.store');
+    Route::post('/wallet/deposit/ajax', [WalletDepositController::class, 'store'])->name('wallet.deposit.ajax.store');
 
-    Route::get('/wallets/payout', [UserPayoutWalletController::class, 'index'])
-        ->name('user.wallet.index');
-    Route::post('/wallets/payout', [UserPayoutWalletController::class, 'store'])
-        ->name('user.wallet.store');
-    Route::put('/wallets/payout/{wallet}', [UserPayoutWalletController::class, 'update'])
-        ->name('user.wallet.update');
-    Route::delete('/wallets/payout/{wallet}', [UserPayoutWalletController::class, 'destroy'])
-        ->name('user.wallet.destroy');
+    // Withdrawal
+    Route::get('/user/withdrawal-methods', [UserDashboardController::class, 'withdrawalMethods'])
+        ->name('customer.withdrawal-methods');
+
+    Route::get('/user/withdrawal-addresses/{option}', [UserDashboardController::class, 'withdrawalAddresses'])
+        ->name('customer.withdrawal-addresses');
+
+    Route::post('/wallet/withdraw/ajax', [WalletWithdrawController::class, 'store'])
+        ->name('wallet.withdraw.ajax.store');
+
+            Route::post('/user/withdrawal-request', [WithdrawalRequestController::class, 'store'])
+        ->name('customer.withdrawal-request.store');
+
+    // Customer payout wallets
+    Route::get('/user/wallets', [UserPayoutWalletController::class, 'index'])
+        ->name('customer.wallets.index');
+    Route::post('/user/wallets', [UserPayoutWalletController::class, 'store'])
+        ->name('customer.wallets.store');
+    Route::delete('/user/wallets/{wallet}', [UserPayoutWalletController::class, 'destroy'])
+        ->name('customer.wallets.destroy');
+    Route::patch('/user/wallets/{wallet}/default', [UserPayoutWalletController::class, 'setDefault'])
+        ->name('customer.wallets.default');
 
     // Delivery address
     Route::get('/vendor/delivery-addresses', [VendorDeliveryAddressController::class, 'index'])
         ->name('vendor.delivery.index');
     Route::post('/vendor/delivery-addresses', [VendorDeliveryAddressController::class, 'store'])
         ->name('vendor.delivery.store');
-
     Route::put('/vendor/delivery-addresses/{address}', [VendorDeliveryAddressController::class, 'update'])
         ->name('vendor.delivery.update');
     Route::delete('/vendor/delivery-addresses/{address}', [VendorDeliveryAddressController::class, 'destroy'])
         ->name('vendor.delivery.destroy');
 
-    
+    // Orders
     Route::get('/vendor/orders', [ProductOrderController::class, 'index'])->name('vendor.orders.index');
     Route::get('/orders/{order}/show', [ProductOrderController::class, 'show'])->name('vendor.orders.show');
-   
 
+    // Shop / profile
     Route::get('/user/shop', [VendorShopController::class, 'index'])->name('vendor.shop.index');
     Route::get('/user/profile', [UserDashboardController::class, 'profile'])->name('customer.profile');
+    // /messages
+     Route::get('/user/messages', [UserMessageController::class, 'index'])->name('customer.messages.index');
+    Route::get('/user/messages/dropdown', [UserMessageController::class, 'dropdown'])->name('customer.messages.dropdown');
+    Route::get('/user/messages/{id}', [UserMessageController::class, 'show'])->name('customer.messages.show');
+    Route::post('/user/messages/{id}/read', [UserMessageController::class, 'markAsRead'])->name('customer.messages.read');
+    Route::post('/user/messages/read-all', [UserMessageController::class, 'markAllAsRead'])->name('customer.messages.read_all');
 });
-
 
 /*
 |--------------------------------------------------------------------------
