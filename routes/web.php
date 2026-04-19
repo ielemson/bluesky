@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\PaymentWalletController;
 use App\Http\Controllers\Admin\PayoutWalletOptionController;
 use App\Http\Controllers\Admin\WalletDepositApprovalController;
 use App\Http\Controllers\Admin\AdminWalletTopupController;
+use App\Http\Controllers\Admin\AdminVendorController;
 
 // Auth Controllers
 use App\Http\Controllers\Auth\LoginController;
@@ -166,16 +167,16 @@ Route::prefix('admin')->group(function () {
 */
 
         Route::prefix('vendors')->name('admin.vendors.')->group(function () {
-            Route::get('/', [VendorController::class, 'index'])->name('index');
-            Route::get('/pending', [VendorController::class, 'pendingApplications'])->name('pending');
-            Route::get('/active', [VendorController::class, 'activeVendors'])->name('active');
-            Route::get('/suspended', [VendorController::class, 'suspendedVectors'])->name('suspended');
-            Route::get('/stats', [VendorController::class, 'statistics'])->name('stats');
-            Route::get('/{id}', [VendorController::class, 'show'])->name('show');
-            Route::post('/{id}/approve', [VendorController::class, 'approve'])->name('approve');
-            Route::post('/{id}/reject', [VendorController::class, 'reject'])->name('reject');
-            Route::get('/{id}/details', [VendorController::class, 'getVendorDetails'])->name('details');
-            Route::get('/{vendor}/products', [VendorController::class, 'vendorProducts'])->name('products');
+            Route::get('/', [AdminVendorController::class, 'index'])->name('index');
+            Route::get('/pending', [AdminVendorController::class, 'pendingApplications'])->name('pending');
+            Route::get('/active', [AdminVendorController::class, 'activeVendors'])->name('active');
+            Route::get('/suspended', [AdminVendorController::class, 'suspendedVendors'])->name('suspended');
+            Route::get('/stats', [AdminVendorController::class, 'statistics'])->name('stats');
+            Route::get('/{id}', [AdminVendorController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [AdminVendorController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [AdminVendorController::class, 'reject'])->name('reject');
+            Route::get('/{id}/details', [AdminVendorController::class, 'getVendorDetails'])->name('details');
+            Route::get('/{vendor}/products', [AdminVendorController::class, 'vendorProducts'])->name('products');
         });
 
         /*
