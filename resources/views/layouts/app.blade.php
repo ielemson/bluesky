@@ -53,14 +53,11 @@
     {{-- CSS --}}
     <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/main.css') }}">
+        @include('partials.floating-css')
 </head>
-  
     <!-- Optional Page Styles -->
     @stack('styles')
-
 </head>
-
-
 <body>
 
     @yield('_header')
@@ -85,6 +82,8 @@
         </div>
          @include('components.login-form')
          @include('components.register-form')
+         @include('partials.floating-assistant')
+     
     </main>
 
     <!-- Vendor JS-->
@@ -129,17 +128,13 @@
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     @stack('scripts')
 
-<script>
+    @include('partials.floating-js')
+
+    <script>
 document.addEventListener("DOMContentLoaded", function () {
     const setCartCount = (count) => {
         document.querySelectorAll('.cart_count').forEach(el => {
             el.textContent = count;
-        });
-    };
-
-    const setCartTotal = (total) => {
-        document.querySelectorAll('.amount').forEach(el => {
-            el.innerHTML = `<span class="currency_symbol">$</span>${total}`;
         });
     };
 
@@ -149,21 +144,26 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     };
 
+    const showToast = (message, success = true) => {
+        Toastify({
+            text: message,
+            duration: 3000,
+            close: true,
+            gravity: "top",
+            position: "right",
+            style: {
+                background: success
+                    ? "linear-gradient(to right, #00b09b, #96c93d)"
+                    : "linear-gradient(to right, #ff5f6d, #ffc371)"
+            }
+        }).showToast();
+    };
+
     document.body.addEventListener("click", async function (e) {
         const link = e.target.closest(".add-to-cart-link");
-        if (!link) return;
+        if (!link || link.classList.contains('disabled')) return;
 
         e.preventDefault();
-
-        const payload = {
-            _token: "{{ csrf_token() }}",
-            product_id: link.dataset.productId,
-            name: link.dataset.name,
-            price: link.dataset.price,
-            slug: link.dataset.slug,
-            image: link.dataset.image,
-            quantity: 1
-        };
 
         try {
             const response = await fetch("{{ route('cart.add.ajax') }}", {
@@ -172,46 +172,35 @@ document.addEventListener("DOMContentLoaded", function () {
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    product_id: link.dataset.productId,
+                    quantity: 1
+                })
             });
 
             const data = await response.json();
 
-            Toastify({
-                text: data.message,
-                duration: 3000,
-                close: true,
-                gravity: "top",
-                position: "right",
-                style: {
-                    background: "linear-gradient(to right, #00b09b, #96c93d)"
-                }
-            }).showToast();
+            if (!response.ok || !data.status) {
+                showToast(data.message || "Unable to add to cart.", false);
+                console.error(data);
+                return;
+            }
 
+            showToast(data.message || "Product added to cart.");
             setCartCount(data.cart_count);
-            setCartTotal(data.cart_total);
             setCartDropdown(data.cart_dropdown);
 
         } catch (error) {
-            Toastify({
-                text: "Something went wrong.",
-                duration: 3000,
-                close: true,
-                gravity: "top",
-                position: "right",
-                style: {
-                    background: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                }
-            }).showToast();
+            console.error(error);
+            showToast("Something went wrong.", false);
         }
     });
 
-    document.body.addEventListener('click', async function (e) {
-        const removeBtn = e.target.closest('.item_remove');
+    document.body.addEventListener("click", async function (e) {
+        const removeBtn = e.target.closest(".item_remove");
         if (!removeBtn) return;
 
         e.preventDefault();
-        const cartId = removeBtn.dataset.cartId;
 
         try {
             const response = await fetch("{{ route('cart.remove.ajax') }}", {
@@ -221,57 +210,42 @@ document.addEventListener("DOMContentLoaded", function () {
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 },
                 body: JSON.stringify({
-                    cart_id: cartId
+                    cart_id: removeBtn.dataset.cartId
                 })
             });
 
             const data = await response.json();
 
-            Toastify({
-                text: data.message,
-                duration: 3000,
-                close: true,
-                gravity: "top",
-                position: "right",
-                style: {
-                    background: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                }
-            }).showToast();
+            if (!response.ok || !data.status) {
+                showToast(data.message || "Unable to remove item.", false);
+                return;
+            }
 
+            showToast(data.message || "Item removed.");
             setCartCount(data.cart_count);
-            setCartTotal(data.cart_total);
             setCartDropdown(data.cart_dropdown);
 
         } catch (error) {
             console.error(error);
-            Toastify({
-                text: "Something went wrong.",
-                duration: 3000,
-                close: true,
-                gravity: "top",
-                position: "right",
-                style: {
-                    background: "linear-gradient(to right, #ff5f6d, #ffc371)"
-                }
-            }).showToast();
+            showToast("Something went wrong.", false);
         }
     });
 
     (async function loadCartState() {
         try {
-            const res = await fetch("{{ route('cart.dropdown') }}");
-            const data = await res.json();
+            const response = await fetch("{{ route('cart.dropdown') }}");
+            const data = await response.json();
 
-            setCartCount(data.cart_count);
-            setCartTotal(data.cart_total);
-            setCartDropdown(data.cart_dropdown);
+            if (data.status) {
+                setCartCount(data.cart_count);
+                setCartDropdown(data.cart_dropdown);
+            }
         } catch (e) {
             console.warn("Cart load failed", e);
         }
     })();
 });
 </script>
-
 
 </body>
 

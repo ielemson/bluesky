@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserWallet;
+use App\Models\WalletTransaction;
 use App\Services\UserMessageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AdminWalletTopupController extends Controller
 {
@@ -46,12 +49,12 @@ class AdminWalletTopupController extends Controller
         return view('admin.wallets.topup', compact('users'));
     }
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
         $data = $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'amount' => ['required', 'numeric', 'min:0.01'],
-            'action' => ['required', 'in:credit,debit'], // 🔥 NEW
+            'action' => ['required', 'in:credit,debit'],
             'admin_note' => ['nullable', 'string'],
             'transaction_reference' => ['nullable', 'string', 'max:191'],
             'proof_path' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf,webp', 'max:4096'],
@@ -72,61 +75,101 @@ class AdminWalletTopupController extends Controller
 
         $user = null;
         $wallet = null;
+        $balanceAfter = 0;
 
-        DB::transaction(function () use ($data, $amount, $action, &$wallet, &$user) {
-
+        DB::transaction(function () use ($data, $amount, $action, $reference, $proofPath, &$wallet, &$user, &$balanceAfter) {
             $user = User::findOrFail($data['user_id']);
 
             $wallet = UserWallet::query()
+                ->where('user_id', $user->id)
                 ->lockForUpdate()
-                ->firstOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'account_balance' => 0,
-                        'available_balance' => 0,
-                        'on_hold' => 0,
-                    ]
-                );
+                ->first();
+
+            if (!$wallet) {
+                $wallet = UserWallet::create([
+                    'user_id' => $user->id,
+                    'account_balance' => 0,
+                    'available_balance' => 0,
+                    'on_hold' => 0,
+                ]);
+
+                $wallet = UserWallet::query()
+                    ->where('id', $wallet->id)
+                    ->lockForUpdate()
+                    ->first();
+            }
+
+            $balanceBefore = (float) $wallet->available_balance;
 
             if ($action === 'credit') {
-                $wallet->account_balance += $amount;
-                $wallet->available_balance += $amount;
-            }
-
-            if ($action === 'debit') {
-                // 🚨 Prevent overdraft
-                if ($wallet->available_balance < $amount) {
-                    abort(422, 'Insufficient wallet balance for this deduction.');
+                $balanceAfter = $balanceBefore + $amount;
+            } else {
+                if ($balanceBefore < $amount) {
+                    throw ValidationException::withMessages([
+                        'amount' => 'Insufficient wallet balance for this deduction.',
+                    ]);
                 }
 
-                $wallet->account_balance -= $amount;
-                $wallet->available_balance -= $amount;
+                $balanceAfter = $balanceBefore - $amount;
             }
 
+            $wallet->available_balance = $balanceAfter;
+            $wallet->account_balance = $balanceAfter + (float) $wallet->on_hold;
             $wallet->save();
+
+            WalletTransaction::create([
+                'user_id' => $user->id,
+                'direction' => $action,
+                'category' => $action === 'credit' ? 'admin_topup' : 'admin_debit',
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'reference' => $reference,
+                'source_type' => UserWallet::class,
+                'source_id' => $wallet->id,
+                'status' => 'completed',
+                'description' => $data['admin_note'] ?? 'Admin wallet adjustment',
+                'posted_at' => now(),
+                'meta' => [
+                    'action' => $action,
+                    'admin_note' => $data['admin_note'] ?? 'Admin wallet adjustment',
+                    'proof_path' => $proofPath,
+                    'performed_by' => auth()->id(),
+                ],
+            ]);
         });
 
-        // 🔔 SEND USER MESSAGE
-        UserMessageService::send(
-            userId: $user->id,
-            title: $action === 'credit' ? 'Wallet Funded' : 'Wallet Debited',
-            message: $action === 'credit'
-                ? 'Your wallet has been credited with $' . number_format($amount, 2)
-                : '$' . number_format($amount, 2) . ' has been deducted from your wallet.',
-            type: 'wallet',
-            meta: [
-                'action' => $action,
-                'amount' => $amount,
+        $title = $action === 'credit' ? 'Wallet Funded' : 'Wallet Debited';
+
+        $message = $action === 'credit'
+            ? 'Your wallet has been credited with $' . number_format($amount, 2) . '.'
+            : '$' . number_format($amount, 2) . ' has been deducted from your wallet.';
+
+        try {
+            UserMessageService::send(
+                $user->id,
+                $title,
+                $message,
+                'wallet',
+                [
+                    'action' => $action,
+                    'amount' => $amount,
+                    'reference' => $reference,
+                    'new_balance' => (float) $wallet->available_balance,
+                    'admin_note' => $data['admin_note'] ?? 'Admin wallet adjustment',
+                    'proof_path' => $proofPath,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::error('User wallet message failed to send', [
+                'user_id' => $user?->id,
                 'reference' => $reference,
-                'new_balance' => (float) $wallet->available_balance,
-                'admin_note' => $data['admin_note'] ?? 'Admin wallet adjustment',
-                'proof_path' => $proofPath,
-            ]
-        );
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return redirect()
             ->route('admin.wallet-options.topup')
             ->with('success', 'Wallet ' . ($action === 'credit' ? 'funded' : 'debited') . ' successfully.');
     }
-
 }

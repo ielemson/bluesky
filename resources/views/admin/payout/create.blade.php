@@ -38,7 +38,8 @@
                         </div>
                         <div class="card-body">
 
-                            <div class="form-group mb-3">
+                           <div class="row">
+                            <div class="col-md-6"> <div class="form-group mb-3">
                                 <label for="type">{{ gtrans('Option type') }} *</label>
                                 <select id="type" name="type"
                                     class="form-control @error('type') is-invalid @enderror"
@@ -55,7 +56,20 @@
                                 @error('type')
                                     <small class="text-danger">{{ $message }}</small>
                                 @enderror
+                            </div></div>
+                            <div class="col-md-6">
+                                 <div class="form-group mb-3">
+                                        <label for="display_name">{{ gtrans('Display Name') }} *</label>
+                                        <input type="text" id="display_name" name="display_name"
+                                            class="form-control @error('display_name') is-invalid @enderror"
+                                            value="{{ old('display_name') }}" placeholder="Display Name"
+                                            data-parsley-required-message="{{ gtrans('Display Name is required.') }}">
+                                        @error('display_name')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
                             </div>
+                           </div>
 
                             <div id="bankInfoBox" class="alert alert-info d-none">
                                 <i class="fa fa-info-circle me-1"></i>
@@ -161,7 +175,7 @@
                     $('#cryptoFields').hide();
                     $('#bankInfoBox').removeClass('d-none');
 
-                    $('#currency').prop('required', false).val('NGN');
+                    $('#currency').prop('required', false).val('USD');
                     $('#chain').prop('required', false).val('BANK_TRANSFER');
                 } else {
                     $('#cryptoFields').show();
@@ -170,7 +184,7 @@
                     $('#currency').prop('required', true);
                     $('#chain').prop('required', true);
 
-                    if (!$('#currency').val() || $('#currency').val() === 'NGN') {
+                    if (!$('#currency').val() || $('#currency').val() === 'USD') {
                         $('#currency').val('USDT');
                     }
 

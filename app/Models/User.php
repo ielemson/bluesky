@@ -41,10 +41,10 @@ class User extends Authenticatable
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
+|--------------------------------------------------------------------------
+| Relationships
+|--------------------------------------------------------------------------
+*/
 
     public function vendor()
     {
@@ -72,39 +72,47 @@ class User extends Authenticatable
     // }
 
     public function payoutWallets()
-        {
-            return $this->hasMany(\App\Models\UserPayoutWallet::class);
-        }
+    {
+        return $this->hasMany(\App\Models\UserPayoutWallet::class);
+    }
 
 
-        public function defaultWallet()
-        {
-            return $this->hasOne(UserWallet::class)->where('currency', 'USD');
-        }
+    public function defaultWallet()
+    {
+        return $this->hasOne(UserWallet::class)->where('currency', 'USD');
+    }
 
-        public function messages(): HasMany
-{
-    return $this->hasMany(UserMessage::class);
-}
+    public function messages(): HasMany
+    {
+        return $this->hasMany(UserMessage::class);
+    }
 
-public function unreadMessages(): HasMany
-{
-    return $this->hasMany(UserMessage::class)->where('is_read', false);
-}
+    public function unreadMessages(): HasMany
+    {
+        return $this->hasMany(UserMessage::class)->where('is_read', false);
+    }
     /**
      * NOTE: this name suggests "user delivery addresses", but model is VendorDeliveryAddress.
      * If these are actually user addresses, consider renaming the model/table/foreign key.
      */
     public function deliveryAddresses()
     {
-        return $this->hasMany(VendorDeliveryAddress::class, 'vendor_id'); // confirm FK is correct
+        return $this->hasMany(VendorDeliveryAddress::class, 'user_id'); // confirm FK is correct
     }
 
+    public function recharges()
+    {
+        return $this->hasMany(UserRecharge::class, 'user_id');
+    }
+    public function paymentWallet()
+    {
+        return $this->belongsTo(PaymentWallet::class, 'payment_wallet_id');
+    }
     /*
-    |--------------------------------------------------------------------------
-    | Scopes
-    |--------------------------------------------------------------------------
-    */
+|--------------------------------------------------------------------------
+| Scopes
+|--------------------------------------------------------------------------
+*/
 
     public function scopeVendors(Builder $query): Builder
     {
@@ -122,10 +130,10 @@ public function unreadMessages(): HasMany
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Helpers
-    |--------------------------------------------------------------------------
-    */
+|--------------------------------------------------------------------------
+| Helpers
+|--------------------------------------------------------------------------
+*/
 
     public function isVendor(): bool
     {
@@ -144,10 +152,10 @@ public function unreadMessages(): HasMany
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Accessors
-    |--------------------------------------------------------------------------
-    */
+|--------------------------------------------------------------------------
+| Accessors
+|--------------------------------------------------------------------------
+*/
 
     public function getDisplayNameAttribute(): string
     {
@@ -166,6 +174,11 @@ public function unreadMessages(): HasMany
     public function getUserTypeAttribute(): string
     {
         return $this->isVendor() ? 'vendor' : 'customer';
+    }
+
+    public function walletTransactions()
+    {
+        return $this->hasMany(WalletTransaction::class);
     }
 
     /**

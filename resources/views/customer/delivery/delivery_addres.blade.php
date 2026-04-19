@@ -103,7 +103,7 @@
 
     </section>
 
-@section('modal_wapper')
+@section('modal_wrapper')
     <div class="modal fade" id="addAddressModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content border-0">

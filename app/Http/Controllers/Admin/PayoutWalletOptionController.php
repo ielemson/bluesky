@@ -35,8 +35,9 @@ class PayoutWalletOptionController extends Controller
         ]);
 
         if ($data['type'] === 'bank') {
-            $data['currency'] = 'NGN';
+            $data['currency'] = 'USD';
             $data['chain'] = 'BANK_TRANSFER';
+            $data['display_name'] = 'Online Banking Withdrawal';
         } else {
             $request->validate([
                 'currency' => ['required', 'string', 'max:20'],
@@ -62,7 +63,7 @@ class PayoutWalletOptionController extends Controller
                 ->withInput();
         }
 
-        unset($data['type']);
+        // unset($data['type']);
 
         PayoutWalletOption::create($data);
 
@@ -87,7 +88,7 @@ class PayoutWalletOptionController extends Controller
         ]);
 
         if ($data['type'] === 'bank') {
-            $data['currency'] = 'NGN';
+            $data['currency'] = 'USD';
             $data['chain'] = 'BANK_TRANSFER';
         } else {
             $request->validate([

@@ -36,6 +36,11 @@ use App\Http\Controllers\WalletDepositController;
 use App\Http\Controllers\WalletWithdrawController;
 use App\Http\Controllers\WithdrawalRequestController;
 use App\Http\Controllers\UserMessageController;
+use App\Http\Controllers\UserRechargeController;
+use App\Http\Controllers\BillingRecordController;
+use App\Http\Controllers\WithdrawalRecordController;
+use App\Http\Controllers\CustomerOrderController;
+use App\Http\Controllers\VendorOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,8 +59,8 @@ Route::post('/language', [LanguageController::class, 'switch'])
 
 Route::get('/', [PageController::class, 'index'])->name('home');
 
-Route::view('/shop', 'shop')->name('shop');
-Route::view('/cart', 'cart')->name('cart');
+// Route::view('/shop', 'shop')->name('shop');
+// Route::view('/cart', 'cart')->name('cart');
 
 // View all products
 Route::get('/shop/products', [PageController::class, 'shop'])
@@ -74,31 +79,52 @@ Route::get('/product/{slug}', [PageController::class, 'product'])
 | CART + CHECKOUT
 |--------------------------------------------------------------------------
 */
-
 Route::prefix('cart')->group(function () {
-    Route::get('/', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/update', [CartController::class, 'update'])->name('cart.update');
-    Route::post('/remove', [CartController::class, 'remove'])->name('cart.remove');
+    Route::get('/', [CartController::class, 'viewCart'])->name('cart.view');
+
     Route::post('/add-ajax', [CartController::class, 'addAjax'])->name('cart.add.ajax');
-    Route::get('/shopping', [CartController::class, 'viewCart'])->name('cart.view');
-    Route::get('/wishlist', [CartController::class, 'wishlist'])->name('wishlist.summary');
+    Route::post('/update', [CartController::class, 'update'])->name('cart.update');
     Route::post('/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
+    Route::post('/remove', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/remove-ajax', [CartController::class, 'removeAjax'])->name('cart.remove.ajax');
 
-    // Checkout
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/dropdown', [CartController::class, 'loadDropdown'])->name('cart.dropdown');
+    Route::get('/summary', [CartController::class, 'summary'])->name('cart.summary');
+
+    Route::get('/wishlist', [CartController::class, 'wishlist'])->name('wishlist.summary');
 });
 
-// AJAX Cart Summary
-Route::get('/cart/summary', function () {
-    return response()->json([
-        'cart_count' => \Cart::getContent()->sum('quantity'),
-        'cart_total' => \Cart::getTotal(),
-    ]);
+// Checkout
+Route::prefix('checkout')->group(function () {
+    Route::get('/', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/process', [CheckoutController::class, 'process'])->name('checkout.process');
 });
 
-Route::get('/cart/dropdown', [CartController::class, 'loadDropdown'])->name('cart.dropdown');
-Route::post('/cart/remove-ajax', [CartController::class, 'removeAjax'])->name('cart.remove.ajax');
+
+// Route::prefix('cart')->group(function () {
+//     Route::get('/', [CartController::class, 'index'])->name('cart.index');
+//     Route::post('/update', [CartController::class, 'update'])->name('cart.update');
+//     Route::post('/remove', [CartController::class, 'remove'])->name('cart.remove');
+//     Route::post('/add-ajax', [CartController::class, 'addAjax'])->name('cart.add.ajax');
+//     Route::get('/shopping', [CartController::class, 'viewCart'])->name('cart.view');
+//     Route::get('/wishlist', [CartController::class, 'wishlist'])->name('wishlist.summary');
+//     Route::post('/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
+
+//     // Checkout
+//     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+//     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+// });
+
+// // AJAX Cart Summary
+// Route::get('/cart/summary', function () {
+//     return response()->json([
+//         'cart_count' => \Cart::getContent()->sum('quantity'),
+//         'cart_total' => \Cart::getTotal(),
+//     ]);
+// });
+
+// Route::get('/cart/dropdown', [CartController::class, 'loadDropdown'])->name('cart.dropdown');
+// Route::post('/cart/remove-ajax', [CartController::class, 'removeAjax'])->name('cart.remove.ajax');
 
 /*
 |--------------------------------------------------------------------------
@@ -134,10 +160,10 @@ Route::prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 
         /*
-        |--------------------------------------------------------------------------
-        | VENDORS
-        |--------------------------------------------------------------------------
-        */
+|--------------------------------------------------------------------------
+| VENDORS
+|--------------------------------------------------------------------------
+*/
 
         Route::prefix('vendors')->name('admin.vendors.')->group(function () {
             Route::get('/', [VendorController::class, 'index'])->name('index');
@@ -153,10 +179,10 @@ Route::prefix('admin')->group(function () {
         });
 
         /*
-        |--------------------------------------------------------------------------
-        | CATEGORIES
-        |--------------------------------------------------------------------------
-        */
+|--------------------------------------------------------------------------
+| CATEGORIES
+|--------------------------------------------------------------------------
+*/
 
         Route::prefix('categories')->name('admin.categories.')->group(function () {
             Route::get('/', [CategoryController::class, 'index'])->name('index');
@@ -172,10 +198,10 @@ Route::prefix('admin')->group(function () {
         });
 
         /*
-        |--------------------------------------------------------------------------
-        | PRODUCTS
-        |--------------------------------------------------------------------------
-        */
+|--------------------------------------------------------------------------
+| PRODUCTS
+|--------------------------------------------------------------------------
+*/
 
         Route::prefix('products')->name('admin.products.')->group(function () {
             Route::get('/', [ProductController::class, 'index'])->name('index');
@@ -196,10 +222,10 @@ Route::prefix('admin')->group(function () {
         });
 
         /*
-        |--------------------------------------------------------------------------
-        | ORDERS
-        |--------------------------------------------------------------------------
-        */
+|--------------------------------------------------------------------------
+| ORDERS
+|--------------------------------------------------------------------------
+*/
 
         Route::prefix('orders')->name('admin.orders.')->group(function () {
             Route::get('/', [AdminOrderController::class, 'index'])->name('index');
@@ -213,10 +239,10 @@ Route::prefix('admin')->group(function () {
         });
 
         /*
-        |--------------------------------------------------------------------------
-        | PAYMENT WALLETS
-        |--------------------------------------------------------------------------
-        */
+|--------------------------------------------------------------------------
+| PAYMENT WALLETS
+|--------------------------------------------------------------------------
+*/
 
         Route::prefix('wallet')->name('admin.wallets.')->group(function () {
             Route::get('/', [PaymentWalletController::class, 'index'])->name('index');
@@ -228,10 +254,10 @@ Route::prefix('admin')->group(function () {
         });
 
         /*
-        |--------------------------------------------------------------------------
-        | WALLET DEPOSITS
-        |--------------------------------------------------------------------------
-        */
+|--------------------------------------------------------------------------
+| WALLET DEPOSITS
+|--------------------------------------------------------------------------
+*/
 
         Route::prefix('deposits')->name('admin.wallet.')->group(function () {
             Route::get('/', [WalletDepositApprovalController::class, 'index'])->name('index');
@@ -247,10 +273,10 @@ Route::prefix('admin')->group(function () {
         });
 
         /*
-        |--------------------------------------------------------------------------
-        | USERS
-        |--------------------------------------------------------------------------
-        */
+|--------------------------------------------------------------------------
+| USERS
+|--------------------------------------------------------------------------
+*/
 
         Route::prefix('users')->name('admin.users.')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');
@@ -265,10 +291,10 @@ Route::prefix('admin')->group(function () {
         });
 
         /*
-        |--------------------------------------------------------------------------
-        | SETTINGS
-        |--------------------------------------------------------------------------
-        */
+|--------------------------------------------------------------------------
+| SETTINGS
+|--------------------------------------------------------------------------
+*/
 
         Route::prefix('settings')->name('admin.settings.')->group(function () {
             Route::get('/', [SettingController::class, 'index'])->name('index');
@@ -278,10 +304,10 @@ Route::prefix('admin')->group(function () {
         });
 
         /*
-        |--------------------------------------------------------------------------
-        | PAYOUT WALLET OPTIONS
-        |--------------------------------------------------------------------------
-        */
+|--------------------------------------------------------------------------
+| PAYOUT WALLET OPTIONS
+|--------------------------------------------------------------------------
+*/
 
         Route::prefix('wallet-options')->name('admin.wallet-options.')->group(function () {
             Route::get('/', [PayoutWalletOptionController::class, 'index'])->name('index');
@@ -335,7 +361,7 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/wallet/withdraw/ajax', [WalletWithdrawController::class, 'store'])
         ->name('wallet.withdraw.ajax.store');
 
-            Route::post('/user/withdrawal-request', [WithdrawalRequestController::class, 'store'])
+    Route::post('/user/withdrawal-request', [WithdrawalRequestController::class, 'store'])
         ->name('customer.withdrawal-request.store');
 
     // Customer payout wallets
@@ -359,18 +385,38 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
         ->name('vendor.delivery.destroy');
 
     // Orders
-    Route::get('/vendor/orders', [ProductOrderController::class, 'index'])->name('vendor.orders.index');
-    Route::get('/orders/{order}/show', [ProductOrderController::class, 'show'])->name('vendor.orders.show');
+    // Route::get('/vendor/orders', [ProductOrderController::class, 'index'])->name('vendor.orders.index');
+    // Route::get('/orders/{order}/show', [ProductOrderController::class, 'show'])->name('vendor.orders.show');
+Route::get('/vendor/orders', [VendorOrderController::class, 'index'])->name('vendor.orders.index');
+    Route::get('/vendor/orders/{order}', [VendorOrderController::class, 'show'])->name('vendor.orders.show');
+
+    Route::get('/user/orders', [CustomerOrderController::class, 'index'])->name('customer.orders.index');
+    Route::get('/user/orders/{order}', [CustomerOrderController::class, 'show'])->name('customer.orders.show');
+
 
     // Shop / profile
     Route::get('/user/shop', [VendorShopController::class, 'index'])->name('vendor.shop.index');
     Route::get('/user/profile', [UserDashboardController::class, 'profile'])->name('customer.profile');
     // /messages
-     Route::get('/user/messages', [UserMessageController::class, 'index'])->name('customer.messages.index');
+    Route::get('/user/messages', [UserMessageController::class, 'index'])->name('customer.messages.index');
     Route::get('/user/messages/dropdown', [UserMessageController::class, 'dropdown'])->name('customer.messages.dropdown');
     Route::get('/user/messages/{id}', [UserMessageController::class, 'show'])->name('customer.messages.show');
     Route::post('/user/messages/{id}/read', [UserMessageController::class, 'markAsRead'])->name('customer.messages.read');
     Route::post('/user/messages/read-all', [UserMessageController::class, 'markAllAsRead'])->name('customer.messages.read_all');
+
+    Route::get('/user/recharges', [UserRechargeController::class, 'index'])->name('customer.recharges.index');
+    Route::post('/user/recharges', [UserRechargeController::class, 'store'])->name('customer.recharges.store');
+    Route::get('/user/recharges/{recharge}', [UserRechargeController::class, 'show'])->name('customer.recharges.show');
+    Route::delete('/user/recharges/{recharge}', [UserRechargeController::class, 'destroy'])->name('customer.recharges.destroy');
+
+    Route::get('/user/billing-records', [BillingRecordController::class, 'index'])->name('customer.billing.index');
+    Route::get('/user/billing-records/{billingRecord}', [BillingRecordController::class, 'show'])->name('customer.billing.show');
+
+    Route::get('/user/withdrawal-records', [WithdrawalRecordController::class, 'index'])
+        ->name('customer.withdrawals.index');
+
+    Route::get('/user/withdrawal-records/{withdrawal}', [WithdrawalRecordController::class, 'show'])
+        ->name('customer.withdrawals.show');
 });
 
 /*

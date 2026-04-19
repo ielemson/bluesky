@@ -1,7 +1,7 @@
-<div class="header-top header-top-ptb-1 d-none d-lg-block">
+<div class="header-top header-top-ptb-1 d-md-block d-lg-block">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-xl-3 col-lg-4">
+            <div class="col-xl-3 col-lg-4 d-none">
                 <div class="header-info">
                     <ul>
                        
@@ -13,7 +13,7 @@
                 </div>
             </div>
 
-            <div class="col-xl-6 col-lg-4">
+            <div class="col-xl-6 col-lg-4 col-md-4">
                 <div class="text-center">
                     <div id="news-flash" class="d-inline-block">
                         <ul>

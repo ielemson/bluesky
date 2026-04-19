@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class VendorDeliveryAddress extends Model
 {
     protected $fillable = [
-        'vendor_id',
+        'user_id',
         'address',
         'phone_country_code',
         'phone_number',
@@ -16,8 +16,8 @@ class VendorDeliveryAddress extends Model
         'is_default',
     ];
 
-    public function vendor()
+      public function user()
     {
-        return $this->belongsTo(User::class, 'vendor_id');
+        return $this->belongsTo(User::class);
     }
 }

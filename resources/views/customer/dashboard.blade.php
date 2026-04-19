@@ -187,7 +187,6 @@
 </div>
 @endsection
 
-
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/parsleyjs"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">

@@ -89,36 +89,63 @@ public function vendorbalance()
 }
 
 
+// public function withdrawalMethods(Request $request)
+// {
+//     $methods = collect([
+//         [
+//             'id' => 'bank_transfer',
+//             'name' => 'Online Banking Withdrawal',
+//             'type' => 'bank',
+//             'currency' => null,
+//             'chain' => null,
+//         ]
+//     ]);
+
+//     $cryptoOptions = \App\Models\PayoutWalletOption::query()
+//         ->where('is_active', true)
+//         ->orderBy('currency')
+//         ->orderBy('chain')
+//         ->get()
+//         ->map(function ($option) {
+//             return [
+//                 'id' => (string) $option->id,
+//                 'name' => $option->currency . '-' . $option->chain,
+//                 'type' => 'crypto',
+//                 'currency' => $option->currency,
+//                 'chain' => $option->chain,
+//             ];
+//         });
+
+//     return response()->json(
+//         $methods->merge($cryptoOptions)->values()
+//     );
+// }
+
 public function withdrawalMethods(Request $request)
 {
-    $methods = collect([
-        [
-            'id' => 'bank_transfer',
-            'name' => 'Online Banking Withdrawal',
-            'type' => 'bank',
-            'currency' => null,
-            'chain' => null,
-        ]
-    ]);
-
-    $cryptoOptions = \App\Models\PayoutWalletOption::query()
+    $methods = \App\Models\PayoutWalletOption::query()
         ->where('is_active', true)
         ->orderBy('currency')
         ->orderBy('chain')
         ->get()
         ->map(function ($option) {
+            $type = $option->type ?? 'crypto';
+
             return [
                 'id' => (string) $option->id,
-                'name' => $option->currency . '-' . $option->chain,
-                'type' => 'crypto',
+                'name' => $option->name ?: (
+                    $type === 'bank'
+                        ? 'Online Banking Withdrawal'
+                        : trim(($option->currency ?? '') . '-' . ($option->chain ?? ''), '-')
+                ),
+                'type' => $type,
                 'currency' => $option->currency,
                 'chain' => $option->chain,
             ];
-        });
+        })
+        ->values();
 
-    return response()->json(
-        $methods->merge($cryptoOptions)->values()
-    );
+    return response()->json($methods);
 }
 
     public function withdrawalAddresses($option)

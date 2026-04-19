@@ -19,13 +19,19 @@
     <link rel="stylesheet" href="{{ asset('customer/vendor_components/bootstrap-daterangepicker/daterangepicker.css') }}">
     <link rel="stylesheet" href="{{ asset('customer/vendor_components/morris.js/morris.css') }}">
     <link rel="stylesheet" href="{{ asset('customer/vendor_components/datatable/datatables.min.css') }}">
-
+<link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{{ asset('customer/css/bootstrap-extend.css') }}">
     <link rel="stylesheet" href="{{ asset('customer/css/master_style.css') }}">
     <link rel="stylesheet" href="{{ asset('customer/css/skins/_all-skins.css') }}">
-
+    @include('partials.floating-css')
     @stack('styles')
+    <style>
+        .sidebar-menu i.mdi {
+    margin-right: 10px;
+    font-size: 18px;
+}
+    </style>
 </head>
 
 <body class="hold-transition skin-info-light fixed sidebar-mini">
@@ -59,6 +65,8 @@
         <div class="control-sidebar-bg"></div>
 
         @yield('modal_wrapper')
+        @include('partials.floating-assistant')
+        
     </div>
 
     <!-- Vendor JS -->
@@ -71,6 +79,7 @@
     <script src="{{ asset('customer/js/template.js') }}"></script>
 
     @stack('scripts')
+    @include('partials.floating-js')
 </body>
 
 </html>
