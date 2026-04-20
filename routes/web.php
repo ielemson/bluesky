@@ -309,7 +309,7 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/user/password/change', [UserDashboardController::class, 'update'])->name('customer.password.change');
 
     // Vendor application
-    Route::get('/user/store/apply', [VendorController::class, 'apply_form'])->name('vendor.apply_form');
+    Route::get('/user/store/apply', [VendorController::class, 'applyForm'])->name('vendor.apply_form');
     Route::post('/store/apply', [VendorController::class, 'apply'])->name('vendor.apply');
 
     // Vendor products
