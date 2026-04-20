@@ -10,9 +10,9 @@
             <p class="text-muted mb-0">Track your wallet top-up submissions and statuses.</p>
         </div>
 
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addRechargeModal">
+        <a href="{{ route('vendor.balance') }}"  class="btn btn-primary">
             New Recharge
-        </button>
+        </a>
     </div>
 
     @if(session('status'))
@@ -93,9 +93,9 @@
                 <div class="text-center py-5">
                     <h5 class="mb-2">No recharge record yet</h5>
                     <p class="text-muted mb-3">Click the button below to submit your first recharge.</p>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addRechargeModal">
+                    <a href ="{{ route('vendor.balance') }}" class="btn btn-primary">
                         New Recharge
-                    </button>
+                    </a>
                 </div>
             @endif
         </div>
