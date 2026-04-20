@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Spatie\Permission\Models\Role;
-// use Mews\Captcha\Facades\Captcha;
+
 class RegisterController extends Controller
 {
     public function showRegistrationForm()
@@ -17,117 +15,72 @@ class RegisterController extends Controller
         return view('auth.register');
     }
 
-// public function register(Request $request)
-// {
-//     $contact = $request->input('contact');
-//     $isEmail = filter_var($contact, FILTER_VALIDATE_EMAIL);
-//     $isPhone = preg_match('/^\+?\d{7,15}$/', $contact);
+    public function registerCustomer(Request $request)
+    {
+        $contact = trim((string) $request->input('contact'));
 
-//     if (!$isEmail && !$isPhone) {
-//         return response()->json(['errors' => ['contact' => ['Please enter a valid email or phone number.']]], 422);
-//     }
+        $isEmail = filter_var($contact, FILTER_VALIDATE_EMAIL) !== false;
+        $isPhone = preg_match('/^\+?\d{7,15}$/', $contact);
 
-//     $rules = [
-//         'nickname' => 'required|string|max:255',
-//         'name' => 'nullable|string|max:255',
-//         'password' => 'required|confirmed|min:6',
-//         'verification_code' => 'required|string',
-//         'contact' => $isEmail ? 'required|email|unique:users,email' : 'required|string|unique:users,contact',
-//     ];
+        if (! $isEmail && ! $isPhone) {
+            return response()->json([
+                'errors' => [
+                    'contact' => ['Please enter a valid email or phone number.'],
+                ],
+            ], 422);
+        }
 
-//     $validator = Validator::make($request->all(), $rules);
-//     if ($validator->fails()) {
-//         return response()->json(['errors' => $validator->errors()], 422);
-//     }
+        $validator = Validator::make(
+            [
+                'nickname' => $request->input('nickname'),
+                'name' => $request->input('name'),
+                'password' => $request->input('password'),
+                'password_confirmation' => $request->input('password_confirmation'),
+                'verification_code' => $request->input('verification_code'),
+                'contact' => $contact,
+            ],
+            [
+                'nickname' => ['required', 'string', 'max:255'],
+                'name' => ['nullable', 'string', 'max:255'],
+                'password' => ['required', 'confirmed', 'min:6'],
+                'verification_code' => ['required', 'string'],
+                'contact' => ['required', 'string', 'max:255', 'unique:users,contact'],
+            ]
+        );
 
-//     $customerId = $this->generateCustomerId();
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors(),
+            ], 422);
+        }
 
-//     $user = new User();
-//     $user->customer_id = $customerId;
-//     $user->nickname = $request->nickname;
-//     $user->is_vendor = false;
-//     $user->name = $request->name;
-//     $user->password = Hash::make($request->password);
+        $user = new User();
+        $user->customer_id = $this->generateCustomerId();
+        $user->nickname = $request->input('nickname');
+        $user->name = $request->input('name');
+        $user->contact = $contact;
+        $user->is_vendor = false;
+        $user->status = 'active';
+        $user->password = Hash::make($request->input('password'));
+        $user->save();
 
-//     if ($isEmail) {
-//         $user->email = $contact;
-//     } else {
-//         $user->contact = $contact;
-//     }
+        $user->assignRole('customer');
 
-//     $user->save();
-//     $user->assignRole('customer');
-
-//     Auth::login($user); // Log in immediately
-
-//     $redirect = $request->input('redirect_to', route('customer.dashboard'));
-
-//     return response()->json([
-//         'status' => true,
-//         'message' => 'Registration successful!',
-//         'redirect_url' => $redirect
-//     ]);
-// }
-
- public function registerCustomer(Request $request)
-{
-    $contact = $request->input('contact');
-    $isEmail = filter_var($contact, FILTER_VALIDATE_EMAIL);
-    $isPhone = preg_match('/^\+?\d{7,15}$/', $contact);
-
-    if (!$isEmail && !$isPhone) {
         return response()->json([
-            'errors' => ['contact' => ['Please enter a valid email or phone number.']]
-        ], 422);
+            'status' => true,
+            'message' => 'Registration successful! Please login to continue.',
+        ]);
     }
 
-    $rules = [
-        'nickname' => 'required|string|max:255',
-        'name' => 'nullable|string|max:255',
-        'password' => 'required|confirmed|min:6',
-        'verification_code' => 'required|string',
-        'contact' => 'required|string|unique:users,contact'
-    ];
+    /**
+     * Generate a unique 5-digit numeric customer ID.
+     */
+    private function generateCustomerId(): string
+    {
+        do {
+            $customerId = (string) random_int(10000, 99999);
+        } while (User::where('customer_id', $customerId)->exists());
 
-    $validator = Validator::make($request->all(), $rules);
-    if ($validator->fails()) {
-        return response()->json(['errors' => $validator->errors()], 422);
+        return $customerId;
     }
-
-    $customerId = $this->generateCustomerId();
-
-    $user = new User();
-    $user->customer_id = $customerId;
-    $user->nickname = $request->nickname;
-    $user->is_vendor = false;
-    $user->name = $request->name;
-    $user->status = "active";
-    $user->contact = $contact; // ALWAYS save to contact
-    $user->password = Hash::make($request->password);
-    $user->save();
-
-    $user->assignRole('customer');
-
-    return response()->json([
-        'status' => true,
-        'message' => 'Registration successful! Please login to continue.'
-    ]);
-}
-
-
-/**
- * Generate a unique 5-digit + 1-letter customer ID.
- */
-private function generateCustomerId()
-{
-    do {
-        $digits = rand(10000, 99999);
-        $letter = chr(rand(65, 90)); // A–Z
-        $customerId = $digits . $letter;
-    } while (User::where('customer_id', $customerId)->exists());
-
-    return $customerId;
-}
-
-
 }
