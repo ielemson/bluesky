@@ -25,7 +25,6 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProductOrderController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserPayoutWalletController;
@@ -101,31 +100,6 @@ Route::prefix('checkout')->group(function () {
     Route::post('/process', [CheckoutController::class, 'process'])->name('checkout.process');
 });
 
-
-// Route::prefix('cart')->group(function () {
-//     Route::get('/', [CartController::class, 'index'])->name('cart.index');
-//     Route::post('/update', [CartController::class, 'update'])->name('cart.update');
-//     Route::post('/remove', [CartController::class, 'remove'])->name('cart.remove');
-//     Route::post('/add-ajax', [CartController::class, 'addAjax'])->name('cart.add.ajax');
-//     Route::get('/shopping', [CartController::class, 'viewCart'])->name('cart.view');
-//     Route::get('/wishlist', [CartController::class, 'wishlist'])->name('wishlist.summary');
-//     Route::post('/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.updateQuantity');
-
-//     // Checkout
-//     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
-//     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
-// });
-
-// // AJAX Cart Summary
-// Route::get('/cart/summary', function () {
-//     return response()->json([
-//         'cart_count' => \Cart::getContent()->sum('quantity'),
-//         'cart_total' => \Cart::getTotal(),
-//     ]);
-// });
-
-// Route::get('/cart/dropdown', [CartController::class, 'loadDropdown'])->name('cart.dropdown');
-// Route::post('/cart/remove-ajax', [CartController::class, 'removeAjax'])->name('cart.remove.ajax');
 
 /*
 |--------------------------------------------------------------------------
@@ -385,10 +359,8 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::delete('/vendor/delivery-addresses/{address}', [VendorDeliveryAddressController::class, 'destroy'])
         ->name('vendor.delivery.destroy');
 
-    // Orders
-    // Route::get('/vendor/orders', [ProductOrderController::class, 'index'])->name('vendor.orders.index');
-    // Route::get('/orders/{order}/show', [ProductOrderController::class, 'show'])->name('vendor.orders.show');
-Route::get('/vendor/orders', [VendorOrderController::class, 'index'])->name('vendor.orders.index');
+    
+    Route::get('/vendor/orders', [VendorOrderController::class, 'index'])->name('vendor.orders.index');
     Route::get('/vendor/orders/{order}', [VendorOrderController::class, 'show'])->name('vendor.orders.show');
 
     Route::get('/user/orders', [CustomerOrderController::class, 'index'])->name('customer.orders.index');
