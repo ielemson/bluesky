@@ -64,7 +64,7 @@
                                                 class="linearicons-eye toggle-reg-password position-absolute start-0 top-50 translate-middle-y ms-3"
                                                 style="cursor: pointer;"></span>
                                             <input type="password" name="password" id="regPassword" required
-                                                class="form-control ps-5"
+                                                class="form-control"
                                                 placeholder="Create password"
                                                 data-parsley-minlength="6"
                                                 data-parsley-minlength-message="Password must be at least 6 characters">
@@ -78,7 +78,7 @@
                                                 class="linearicons-eye toggle-reg-password position-absolute start-0 top-50 translate-middle-y ms-3"
                                                 style="cursor: pointer;"></span>
                                             <input type="password" name="password_confirmation" required
-                                                class="form-control ps-5"
+                                                class="form-control"
                                                 placeholder="Confirm password"
                                                 data-parsley-equalto="#regPassword"
                                                 data-parsley-equalto-message="Passwords do not match">

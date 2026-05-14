@@ -40,7 +40,7 @@
                                     <span
                                         class="linearicons-eye toggle-password position-absolute start-0 top-50 translate-middle-y ms-3"
                                         style="cursor: pointer;"></span>
-                                    <input type="password" name="password" required class="form-control ps-5"
+                                    <input type="password" name="password" required class="form-control"
                                         placeholder="Enter your password"
                                         data-parsley-minlength="6"
                                         data-parsley-minlength-message="Password must be at least 6 characters">
