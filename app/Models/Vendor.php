@@ -13,6 +13,7 @@ class Vendor extends Model
 
     protected $fillable = [
         'user_id',
+        'vendor_invitation_code_id',
         'store_logo',
         'store_name',
         'contact_person',
@@ -23,23 +24,52 @@ class Vendor extends Model
         'main_business',
         'address',
         'status',
+        'rejection_reason',
     ];
 
     /*
-|--------------------------------------------------------------------------
-| RELATIONSHIPS
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class,'user_id');
+    }
+
+    public function vendorProducts()
+    {
+        return $this->hasMany(VendorProduct::class, 'vendor_id');
+    }
+
+  public function invitationCode()
+{
+    return $this->belongsTo(
+        VendorInvitationCode::class,
+        'invite_code',
+        'code'
+    );
+}
+
+    public function products()
+    {
+        return $this->hasManyThrough(
+            Product::class,
+            VendorProduct::class,
+            'vendor_id',
+            'id',
+            'id',
+            'product_id'
+        );
     }
 
     /*
-|--------------------------------------------------------------------------
-| SCOPES
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
+
     public function scopePending($query)
     {
         return $query->where('status', 'pending');
@@ -50,32 +80,18 @@ class Vendor extends Model
         return $query->where('status', 'approved');
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'approved');
+    }
+
     public function scopeRejected($query)
     {
         return $query->where('status', 'rejected');
     }
 
-    // In Vendor.php
-public function scopeActive($query)
-{
-    return $query->where('status', 'approved');
-}
-
-public function vendorProducts()
-{
-    return $this->hasMany(VendorProduct::class, 'vendor_id');
-}
-
-public function products()
-{
-    // convenient shortcut to get Product models directly if you ever need it
-    return $this->hasManyThrough(
-        Product::class,
-        VendorProduct::class,
-        'vendor_id',   // FK on vendor_products
-        'id',          // PK on products
-        'id',          // PK on vendors
-        'product_id'   // FK on vendor_products
-    );
-}
+    public function scopeSuspended($query)
+    {
+        return $query->where('status', 'suspended');
+    }
 }

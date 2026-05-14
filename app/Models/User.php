@@ -48,28 +48,23 @@ class User extends Authenticatable
 
     public function vendor()
     {
-        return $this->hasOne(Vendor::class);
+        return $this->hasOne(Vendor::class, 'user_id');
     }
 
-    public function orders()
+    public function wallets()
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(UserWallet::class, 'user_id');
     }
 
     public function wallet()
     {
-        return $this->hasOne(UserWallet::class);
+        return $this->hasOne(UserWallet::class, 'user_id');
     }
 
-    public function payoutWallet()
+    public function orders()
     {
-        return $this->hasOne(UserPayoutWallet::class);
+        return $this->hasMany(Order::class, 'user_id');
     }
-
-    // public function payoutWallets()
-    // {
-    //     return $this->hasMany(UserPayoutWallet::class);
-    // }
 
     public function payoutWallets()
     {
@@ -108,6 +103,15 @@ class User extends Authenticatable
     {
         return $this->belongsTo(PaymentWallet::class, 'payment_wallet_id');
     }
+
+
+    /*
+|--------------------------------------------------------------------------
+| Relationships
+|--------------------------------------------------------------------------
+*/
+
+
     /*
 |--------------------------------------------------------------------------
 | Scopes

@@ -61,63 +61,7 @@ class VendorProductController extends Controller
         return view('customer.products.index', compact('products', 'categories', 'category'));
     }
 
-    /**
-     * Add product to vendor's listing
-     */
-    // public function addToListing(Request $request)
-    // {
-    //     $request->validate([
-    //         'product_id' => 'required|exists:products,id'
-    //     ]);
-
-    //     try {
-    //         $product = Product::findOrFail($request->product_id);
-    //         $vendorId = Auth::id();
-
-    //         // Check if product is available for vendors
-    //         if (!$product->is_available_for_vendors) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'This product is not available for vendor listing.'
-    //             ], 403);
-    //         }
-
-    //         // Check if vendor already has this product in their listing
-    //         $existingListing = VendorProduct::where('vendor_id', $vendorId)
-    //             ->where('product_id', $product->id)
-    //             ->first();
-
-    //         if ($existingListing) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'This product is already in your listing.'
-    //             ], 409);
-    //         }
-
-    //         // Create vendor listing
-    //         VendorProduct::create([
-    //             'vendor_id' => $vendorId,
-    //             'product_id' => $product->id,
-    //             'vendor_price' => $product->price, // Default to product price, vendor can change later
-    //             'stock_quantity' => 0, // Vendor starts with 0 stock
-    //             'is_active' => true
-    //         ]);
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Product added to your listing successfully!',
-    //             'product_name' => $product->name
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         \Log::error('Error adding product to vendor listing: ' . $e->getMessage());
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Error adding product to listing. Please try again.'
-    //         ], 500);
-    //     }
-    // }
-
+   
     public function addToListing(Request $request)
 {
     $request->validate([

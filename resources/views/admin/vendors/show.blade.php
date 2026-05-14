@@ -35,22 +35,22 @@
 
                                 <p class="text-muted mb-2">
                                     <strong class="text-info">Full Name :</strong>
-                                    <span class="ms-2">{{ $vendor->user->name }}</span>
+                                    <span class="ms-2">{{ $vendor->user->nickname }}</span>
                                 </p>
 
                                 <p class="text-muted mb-2">
                                     <strong class="text-info">Contact Person :</strong>
                                     <span class="ms-2">{{ $vendor->contact_person ?? 'N/A' }}</span>
                                 </p>
-
+{{-- 
                                 <p class="text-muted mb-2">
                                     <strong class="text-info">Mobile :</strong>
                                     <span class="ms-2">{{ $vendor->user->contact ?? 'N/A' }}</span>
-                                </p>
+                                </p> --}}
 
                                 <p class="text-muted mb-2">
-                                    <strong class="text-info">Email :</strong>
-                                    <span class="ms-2">{{ $vendor->user->email }}</span>
+                                    <strong class="text-info">Email / Mobile :</strong>
+                                    <span class="ms-2">{{ $vendor->user->email ? $vendor->user->email : $vendor->user->contact }}</span>
                                 </p>
 
                                 <p class="text-muted mb-2">
@@ -146,48 +146,103 @@
 
                             <div class="tab-content">
                                 {{-- Store tab --}}
-                                <div class="tab-pane show active" id="store">
-                                    <h5 class="text-uppercase mb-3">
-                                        <i class="mdi mdi-store me-1"></i> Store Information
-                                    </h5>
+                             <div class="tab-pane show active" id="store">
+    <h5 class="text-uppercase mb-3">
+        <i class="mdi mdi-store me-1"></i> Store Information
+    </h5>
 
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <p><strong>Store Name:</strong> {{ $vendor->store_name }}</p>
-                                            <p><strong>Contact Person:</strong> {{ $vendor->contact_person }}</p>
-                                            <p><strong>ID Number:</strong> {{ $vendor->id_number }}</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <p><strong>Business Type:</strong> {{ $vendor->main_business }}</p>
-                                            <p><strong>Address:</strong> {{ $vendor->address }}</p>
-                                            <p><strong>Invite Code:</strong> {{ $vendor->invite_code ?? 'N/A' }}</p>
-                                        </div>
-                                    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <p><strong>Store Name:</strong> {{ $vendor->store_name }}</p>
+            <p><strong>Contact Person:</strong> {{ $vendor->contact_person }}</p>
+            <p><strong>ID Number:</strong> {{ $vendor->id_number }}</p>
 
-                                    <h6 class="mt-4 mb-2"><i class="mdi mdi-id-card me-1"></i> ID Card Images</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 text-center mb-3">
-                                            <p class="mb-1"><strong>Front</strong></p>
-                                            @if ($vendor->idcard_front)
-                                                <img src="{{ asset($vendor->idcard_front) }}" alt="ID Front"
-                                                    class="img-fluid rounded bg-light"
-                                                    style="max-height:180px;object-fit:cover;">
-                                            @else
-                                                <span class="badge badge-secondary">No front image</span>
-                                            @endif
-                                        </div>
-                                        <div class="col-md-6 text-center mb-3">
-                                            <p class="mb-1"><strong>Back</strong></p>
-                                            @if ($vendor->idcard_back)
-                                                <img src="{{ asset($vendor->idcard_back) }}" alt="ID Back"
-                                                    class="img-fluid rounded bg-light"
-                                                    style="max-height:180px;object-fit:cover;">
-                                            @else
-                                                <span class="badge badge-secondary">No back image</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
+            <p>
+                <strong>Vendor Status:</strong>
+
+                @if ($vendor->status == 'approved')
+                    <span class="badge bg-success">Approved</span>
+                @elseif($vendor->status == 'pending')
+                    <span class="badge bg-warning text-dark">Pending</span>
+                @elseif($vendor->status == 'rejected')
+                    <span class="badge bg-danger">Rejected</span>
+                @elseif($vendor->status == 'suspended')
+                    <span class="badge bg-dark">Suspended</span>
+                @endif
+            </p>
+        </div>
+
+        <div class="col-md-6">
+            <p><strong>Business Type:</strong> {{ $vendor->main_business }}</p>
+
+            <p><strong>Address:</strong> {{ $vendor->address }}</p>
+
+            <p>
+                <strong>Invite Code:</strong>
+                {{ $vendor->invitationCode->code ?? $vendor->invite_code ?? 'N/A' }}
+            </p>
+
+            <p>
+                <strong>Company:</strong>
+                {{ $vendor->invitationCode->title ?? 'N/A' }}
+            </p>
+
+            <p>
+                <strong>Office:</strong>
+                {{ $vendor->invitationCode->location ?? 'N/A' }}
+            </p>
+
+            <p>
+                <strong>Invitation Status:</strong>
+
+                @if(optional($vendor->invitationCode)->is_active)
+                    <span class="badge bg-success">Active</span>
+                @else
+                    <span class="badge bg-secondary">Inactive</span>
+                @endif
+            </p>
+        </div>
+    </div>
+
+    @if ($vendor->rejection_reason)
+        <div class="alert alert-danger mt-3">
+            <strong>Rejection Reason:</strong>
+            {{ $vendor->rejection_reason }}
+        </div>
+    @endif
+
+    <h6 class="mt-4 mb-2">
+        <i class="mdi mdi-id-card me-1"></i> ID Card Images
+    </h6>
+
+    <div class="row">
+        <div class="col-md-6 text-center mb-3">
+            <p class="mb-1"><strong>Front</strong></p>
+
+            @if ($vendor->idcard_front)
+                <img src="{{ asset($vendor->idcard_front) }}"
+                    alt="ID Front"
+                    class="img-fluid rounded bg-light border"
+                    style="max-height:180px;object-fit:cover;">
+            @else
+                <span class="badge bg-secondary">No front image</span>
+            @endif
+        </div>
+
+        <div class="col-md-6 text-center mb-3">
+            <p class="mb-1"><strong>Back</strong></p>
+
+            @if ($vendor->idcard_back)
+                <img src="{{ asset($vendor->idcard_back) }}"
+                    alt="ID Back"
+                    class="img-fluid rounded bg-light border"
+                    style="max-height:180px;object-fit:cover;">
+            @else
+                <span class="badge bg-secondary">No back image</span>
+            @endif
+        </div>
+    </div>
+</div>
 
                                 {{-- Products tab (VendorProduct + Product) --}}
                                 {{-- Products tab --}}

@@ -10,57 +10,38 @@
 
 <section class="content">
     <div class="row mb-4">
-        <div class="col-md-4 col-12">
-            <div class="box box-body">
-                <h6 class="mb-30">
-                    <span class="text-uppercase">Total Listings</span>
-                    <span class="float-right"><a class="btn btn-xs btn-primary" href="#">View</a></span>
-                </h6>
 
-                <p class="font-size-26">{{ $listings->total() }}</p>
+    {{-- TOTAL LISTINGS --}}
+    <div class="col-md-12 col-12">
+        <a href="{{ route('customer.products.index') }}" class="text-decoration-none">
+            <div class="box box-body listing-stat-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-uppercase text-muted mb-1 font-weight-600">
+                            Total Listings
+                        </p>
 
-                <div class="progress progress-xxs mt-0 mb-10">
-                    <div class="progress-bar bg-danger" role="progressbar" style="width: 35%; height: 4px;"
-                        aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+                        <h2 class="mb-0 font-weight-bold">
+                            {{ $listings->total() }}
+                        </h2>
+                    </div>
+
+                    <div class="listing-stat-icon bg-primary">
+                        <i class="mdi mdi-format-list-bulleted text-white"></i>
+                    </div>
                 </div>
 
-            </div>
-        </div>
-
-        <div class="col-md-4 col-12">
-            <div class="box box-body">
-                <h6 class="mb-30">
-                    <span class="text-uppercase">Active Listings</span>
-                    <span class="float-right"><a class="btn btn-xs btn-primary" href="#">View</a></span>
-                </h6>
-
-                <p class="font-size-26">{{ $listings->where('is_active', true)->count() }}</p>
-
-                <div class="progress progress-xxs mt-0 mb-10">
-                    <div class="progress-bar bg-danger" role="progressbar" style="width: 35%; height: 4px;"
-                        aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="mt-3">
+                    <small class="text-primary font-weight-bold">
+                        Manage Listings →
+                    </small>
                 </div>
-
             </div>
-        </div>
-
-        <div class="col-md-4 col-12">
-            <div class="box box-body">
-                <h6 class="mb-30">
-                    <span class="text-uppercase">In Stock</span>
-                    <span class="float-right"><a class="btn btn-xs btn-primary" href="#">View</a></span>
-                </h6>
-
-                <p class="font-size-26">{{ $listings->where('stock_quantity', '>', 0)->count() }}</p>
-
-                <div class="progress progress-xxs mt-0 mb-10">
-                    <div class="progress-bar bg-danger" role="progressbar" style="width: 35%; height: 4px;"
-                        aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-
-            </div>
-        </div>
+        </a>
     </div>
+
+
+</div>
 
   <div class="row">
     @forelse($listings as $listing)
@@ -142,12 +123,12 @@
                     <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
                         <span class="text-muted small">Listing ID: #{{ $listing->id }}</span>
 
-                        <button class="btn btn-sm btn-outline-danger remove-listing"
+                        {{-- <button class="btn btn-sm btn-outline-danger remove-listing"
                                 type="button"
                                 data-listing-id="{{ $listing->id }}"
                                 data-product-name="{{ $listing->product->name }}">
                             <i class="mdi mdi-delete"></i> Remove
-                        </button>
+                        </button> --}}
                     </div>
                 </div>
             </div>

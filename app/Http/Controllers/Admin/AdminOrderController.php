@@ -58,26 +58,137 @@ class AdminOrderController extends Controller
     }
 
 
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'vendor_id' => ['required', 'exists:vendors,id'],
+    //         'customer_name' => ['required', 'string', 'max:255'],
+    //         'customer_phone' => ['required', 'string', 'max:50'],
+    //         'customer_address' => ['required', 'string'],
+    //         'order_date' => ['required', 'date'],
+
+    //         'items' => ['required', 'array', 'min:1'],
+    //         'items.*.vendor_product_id' => ['required', 'exists:vendor_products,id'],
+    //         'items.*.product_id' => ['required', 'exists:products,id'],
+    //         'items.*.quantity' => ['required', 'integer', 'min:1'],
+    //         'items.*.price' => ['required', 'numeric', 'min:0'],
+    //     ]);
+
+    //     try {
+    //         $orderDate = Carbon::parse($validated['order_date'])->startOfDay();
+    //         $today = now()->startOfDay();
+    //         $maxAllowedDate = now()->addDays(14)->endOfDay();
+
+    //         if ($orderDate->gt($maxAllowedDate)) {
+    //             return back()
+    //                 ->withErrors(['order_date' => 'Order date cannot be more than 14 days ahead.'])
+    //                 ->withInput();
+    //         }
+
+    //         $isScheduled = $orderDate->gt($today);
+
+    //         DB::beginTransaction();
+
+    //         $order = Order::create([
+    //             'order_number'     => $this->generateOrderNumber(),
+    //             'vendor_id'        => $validated['vendor_id'],
+    //             'customer_name'    => $validated['customer_name'],
+    //             'customer_phone'   => $validated['customer_phone'],
+    //             'customer_address' => $validated['customer_address'],
+    //             'order_date'       => $validated['order_date'],
+    //             'scheduled_for'    => $isScheduled ? $orderDate : null,
+    //             'released_at'      => $isScheduled ? null : now(),
+    //             'is_scheduled'     => $isScheduled,
+    //             'order_status'     => $isScheduled ? 'scheduled' : 'pending',
+    //         ]);
+
+    //         $grandTotal = 0;
+
+    //         foreach ($validated['items'] as $item) {
+    //             $vendorProduct = VendorProduct::with('product')
+    //                 ->where('id', $item['vendor_product_id'])
+    //                 ->where('vendor_id', $validated['vendor_id'])
+    //                 ->firstOrFail();
+
+    //             $quantity = (int) $item['quantity'];
+    //             $price = (float) $item['price']; // or use $vendorProduct->price if you want DB price as source of truth
+    //             $lineTotal = $quantity * $price;
+    //             $grandTotal += $lineTotal;
+
+    //             $order->items()->create([
+    //                 'order_id'           => $order->id,
+    //                 'product_id'         => $vendorProduct->product_id,
+    //                 'vendor_id'          => $order->vendor_id,
+    //                 'vendor_product_id'  => $vendorProduct->id,
+    //                 'name'               => $vendorProduct->product->name ?? 'Product',
+    //                 'price'              => $price,
+    //                 'quantity'           => $quantity,
+    //                 'total'              => $lineTotal,
+    //                 'vendor_amount'      => $lineTotal,
+    //                 'status'             => 'pending',
+    //             ]);
+    //         }
+
+    //         $order->update([
+    //             'total_amount' => $grandTotal,
+    //         ]);
+
+    //         DB::commit();
+
+    //         return redirect()
+    //             ->route('admin.orders.index')
+    //             ->with(
+    //                 'success',
+    //                 $isScheduled
+    //                     ? 'Order scheduled successfully.'
+    //                     : 'Order submitted successfully.'
+    //             );
+    //     } catch (\Throwable $e) {
+    //         DB::rollBack();
+
+    //         Log::error('Admin order submission failed', [
+    //             'message' => $e->getMessage(),
+    //             'line' => $e->getLine(),
+    //             'file' => $e->getFile(),
+    //         ]);
+
+    //         return back()
+    //             ->withInput()
+    //             ->with('error', 'Order submission failed. ' . $e->getMessage());
+    //     }
+    // }
     public function store(Request $request)
     {
         $validated = $request->validate([
             'vendor_id' => ['required', 'exists:vendors,id'],
+
             'customer_name' => ['required', 'string', 'max:255'],
+            'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:50'],
             'customer_address' => ['required', 'string'],
+            'customer_city' => ['nullable', 'string', 'max:100'],
+            'customer_state' => ['nullable', 'string', 'max:100'],
+            'customer_country' => ['nullable', 'string', 'max:100'],
+            'customer_zipcode' => ['nullable', 'string', 'max:50'],
+
             'order_date' => ['required', 'date'],
+            'notes' => ['nullable', 'string'],
 
             'items' => ['required', 'array', 'min:1'],
             'items.*.vendor_product_id' => ['required', 'exists:vendor_products,id'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.price' => ['required', 'numeric', 'min:0'],
         ]);
 
         try {
             $orderDate = Carbon::parse($validated['order_date'])->startOfDay();
             $today = now()->startOfDay();
             $maxAllowedDate = now()->addDays(14)->endOfDay();
+
+            if ($orderDate->lt($today)) {
+                return back()
+                    ->withErrors(['order_date' => 'Order date cannot be in the past.'])
+                    ->withInput();
+            }
 
             if ($orderDate->gt($maxAllowedDate)) {
                 return back()
@@ -89,48 +200,105 @@ class AdminOrderController extends Controller
 
             DB::beginTransaction();
 
-            $order = Order::create([
-                'order_number'     => $this->generateOrderNumber(),
-                'vendor_id'        => $validated['vendor_id'],
-                'customer_name'    => $validated['customer_name'],
-                'customer_phone'   => $validated['customer_phone'],
-                'customer_address' => $validated['customer_address'],
-                'order_date'       => $validated['order_date'],
-                'scheduled_for'    => $isScheduled ? $orderDate : null,
-                'released_at'      => $isScheduled ? null : now(),
-                'is_scheduled'     => $isScheduled,
-                'order_status'     => $isScheduled ? 'scheduled' : 'pending',
-            ]);
+            $subtotal = 0;
+            $totalDiscount = 0;
 
-            $grandTotal = 0;
+            $order = Order::create([
+                'order_number' => $this->generateOrderNumber(),
+
+                'user_id' => null,
+                'vendor_id' => $validated['vendor_id'],
+                'created_by' => auth()->id(),
+                'order_source' => 'admin',
+
+                'customer_name' => $validated['customer_name'],
+                'customer_email' => $validated['customer_email'] ?? null,
+                'customer_phone' => $validated['customer_phone'],
+                'customer_address' => $validated['customer_address'],
+                'customer_city' => $validated['customer_city'] ?? null,
+                'customer_state' => $validated['customer_state'] ?? null,
+                'customer_country' => $validated['customer_country'] ?? 'Nigeria',
+                'customer_zipcode' => $validated['customer_zipcode'] ?? null,
+
+                'shipping_address' => $validated['customer_address'],
+                'shipping_city' => $validated['customer_city'] ?? null,
+                'shipping_state' => $validated['customer_state'] ?? null,
+                'shipping_country' => $validated['customer_country'] ?? 'Nigeria',
+                'shipping_zipcode' => $validated['customer_zipcode'] ?? null,
+
+                'subtotal' => 0,
+                'shipping_cost' => 0,
+                'tax_amount' => 0,
+                'discount_amount' => 0,
+                'total_amount' => 0,
+
+                'payment_status' => 'unpaid',
+                'order_status' => $isScheduled ? 'scheduled' : 'pending',
+
+                'is_scheduled' => $isScheduled,
+                'ordered_at' => now(),
+                'order_date' => $orderDate,
+                'scheduled_for' => $isScheduled ? $orderDate : null,
+                'released_at' => $isScheduled ? null : now(),
+
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
             foreach ($validated['items'] as $item) {
                 $vendorProduct = VendorProduct::with('product')
                     ->where('id', $item['vendor_product_id'])
                     ->where('vendor_id', $validated['vendor_id'])
+                    ->where('is_active', 1)
                     ->firstOrFail();
 
+                $product = $vendorProduct->product;
                 $quantity = (int) $item['quantity'];
-                $price = (float) $item['price']; // or use $vendorProduct->price if you want DB price as source of truth
-                $lineTotal = $quantity * $price;
-                $grandTotal += $lineTotal;
+
+                $price = (float) (
+                    $vendorProduct->vendor_price
+                    ?? $vendorProduct->price
+                    ?? $product->price
+                    ?? 0
+                );
+
+                $salePercentage = (float) ($product->sale_percentage ?? 0);
+
+                $lineSubtotal = $price * $quantity;
+                $lineDiscount = $salePercentage > 0
+                    ? ($lineSubtotal * $salePercentage) / 100
+                    : 0;
+
+                $lineTotal = $lineSubtotal - $lineDiscount;
+
+                $subtotal += $lineSubtotal;
+                $totalDiscount += $lineDiscount;
 
                 $order->items()->create([
-                    'order_id'           => $order->id,
-                    'product_id'         => $vendorProduct->product_id,
-                    'vendor_id'          => $order->vendor_id,
-                    'vendor_product_id'  => $vendorProduct->id,
-                    'name'               => $vendorProduct->product->name ?? 'Product',
-                    'price'              => $price,
-                    'quantity'           => $quantity,
-                    'total'              => $lineTotal,
-                    'vendor_amount'      => $lineTotal,
-                    'status'             => 'pending',
+                    'product_id' => $vendorProduct->product_id,
+                    'vendor_id' => $order->vendor_id,
+                    'vendor_product_id' => $vendorProduct->id,
+
+                    'name' => $product->name ?? 'Product',
+                    'price' => $price,
+                    'quantity' => $quantity,
+                    'total' => $lineTotal,
+
+                    'vendor_amount' => $lineTotal,
+                    'status' => 'pending',
                 ]);
             }
 
+            $shippingCost = 0;
+            $taxAmount = 0;
+
+            $totalAmount = ($subtotal + $shippingCost + $taxAmount) - $totalDiscount;
+
             $order->update([
-                'total_amount' => $grandTotal,
+                'subtotal' => $subtotal,
+                'shipping_cost' => $shippingCost,
+                'tax_amount' => $taxAmount,
+                'discount_amount' => $totalDiscount,
+                'total_amount' => $totalAmount,
             ]);
 
             DB::commit();
@@ -154,99 +322,97 @@ class AdminOrderController extends Controller
 
             return back()
                 ->withInput()
-                ->with('error', 'Order submission failed. ' . $e->getMessage());
+                ->with('error', 'Order submission failed. Please check the order details and try again.');
         }
     }
-
-
-public function getVendorProducts(Request $request, Vendor $vendor)
-{
-    $query = VendorProduct::with([
+    public function getVendorProducts(Request $request, Vendor $vendor)
+    {
+        $query = VendorProduct::with([
             'product.images',
             'product.category',
         ])
-        ->where('vendor_id', $vendor->id)
-        ->where('is_active', true)
-        ->whereHas('product', function ($q) use ($request) {
-            $q->where('status', 'active');
+            ->where('vendor_id', $vendor->id)
+            ->where('is_active', true)
+            ->whereHas('product', function ($q) use ($request) {
+                $q->where('status', 'active');
 
-            if ($request->filled('search')) {
-                $search = trim($request->search);
+                if ($request->filled('search')) {
+                    $search = trim($request->search);
 
-                $q->where(function ($sub) use ($search) {
-                    $sub->where('name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%");
-                });
-            }
+                    $q->where(function ($sub) use ($search) {
+                        $sub->where('name', 'like', "%{$search}%")
+                            ->orWhere('sku', 'like', "%{$search}%");
+                    });
+                }
 
-            if ($request->filled('category_id')) {
-                $q->where('category_id', $request->category_id);
-            }
-        });
+                if ($request->filled('category_id')) {
+                    $q->where('category_id', $request->category_id);
+                }
+            });
 
-    if ($request->filled('min_price')) {
-        $query->where('vendor_price', '>=', (float) $request->min_price);
+        if ($request->filled('min_price')) {
+            $query->where('vendor_price', '>=', (float) $request->min_price);
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('vendor_price', '<=', (float) $request->max_price);
+        }
+
+        switch ($request->sort) {
+            case 'price_low':
+                $query->orderBy('vendor_price', 'asc');
+                break;
+
+            case 'price_high':
+                $query->orderBy('vendor_price', 'desc');
+                break;
+
+            case 'oldest':
+                $query->orderBy('id', 'asc');
+                break;
+
+            default:
+                $query->orderByDesc('id');
+                break;
+        }
+
+        $vendorProducts = $query->paginate(10);
+
+        $products = $vendorProducts->getCollection()->map(function ($vendorProduct) {
+            $product = $vendorProduct->product;
+            $firstImage = $product?->images?->first();
+
+            return [
+                'vendor_product_id' => $vendorProduct->id,
+                'product_id' => $vendorProduct->product_id,
+                'name' => $product?->name ?? 'Unnamed Product',
+                'sku' => $product?->sku ?? '',
+                'price' => (float) ($vendorProduct->vendor_price ?? 0),
+                'stock_quantity' => (int) ($vendorProduct->stock_quantity ?? 0),
+                'image' => $firstImage ? asset($firstImage->image_path) : null,
+                'category' => $product?->category?->name,
+                'is_active' => (bool) $vendorProduct->is_active,
+            ];
+        })->values();
+
+        return response()->json([
+            'success' => true,
+            'vendor' => [
+                'id' => $vendor->id,
+                'user_id' => $vendor->user_id,
+                'store_name' => $vendor->store_name,
+            ],
+            'products' => $products,
+            'pagination' => [
+                'current_page' => $vendorProducts->currentPage(),
+                'last_page' => $vendorProducts->lastPage(),
+                'per_page' => $vendorProducts->perPage(),
+                'total' => $vendorProducts->total(),
+                'from' => $vendorProducts->firstItem(),
+                'to' => $vendorProducts->lastItem(),
+            ],
+        ]);
     }
-
-    if ($request->filled('max_price')) {
-        $query->where('vendor_price', '<=', (float) $request->max_price);
-    }
-
-    switch ($request->sort) {
-        case 'price_low':
-            $query->orderBy('vendor_price', 'asc');
-            break;
-
-        case 'price_high':
-            $query->orderBy('vendor_price', 'desc');
-            break;
-
-        case 'oldest':
-            $query->orderBy('id', 'asc');
-            break;
-
-        default:
-            $query->orderByDesc('id');
-            break;
-    }
-
-    $vendorProducts = $query->paginate(10);
-
-    $products = $vendorProducts->getCollection()->map(function ($vendorProduct) {
-        $product = $vendorProduct->product;
-        $firstImage = $product?->images?->first();
-
-        return [
-            'vendor_product_id' => $vendorProduct->id,
-            'product_id' => $vendorProduct->product_id,
-            'name' => $product?->name ?? 'Unnamed Product',
-            'sku' => $product?->sku ?? '',
-            'price' => (float) ($vendorProduct->vendor_price ?? 0),
-            'stock_quantity' => (int) ($vendorProduct->stock_quantity ?? 0),
-            'image' => $firstImage ? asset($firstImage->image_path) : null,
-            'category' => $product?->category?->name,
-            'is_active' => (bool) $vendorProduct->is_active,
-        ];
-    })->values();
-
-    return response()->json([
-        'success' => true,
-        'vendor' => [
-            'id' => $vendor->id,
-            'user_id' => $vendor->user_id,
-            'store_name' => $vendor->store_name,
-        ],
-        'products' => $products,
-        'pagination' => [
-            'current_page' => $vendorProducts->currentPage(),
-            'last_page' => $vendorProducts->lastPage(),
-            'per_page' => $vendorProducts->perPage(),
-            'total' => $vendorProducts->total(),
-            'from' => $vendorProducts->firstItem(),
-            'to' => $vendorProducts->lastItem(),
-        ],
-    ]);
-}
 
     protected function generateOrderNumber(): string
     {

@@ -596,7 +596,7 @@
                                         <input type="number"
                                             class="form-control @error('sale_percentage') is-invalid @enderror"
                                             id="sale_percentage" name="sale_percentage"
-                                            value="{{ old('sale_percentage') }}" placeholder="0" min="1"
+                                            value="{{25}}" placeholder="0" min="1"
                                             max="100">
                                         @error('sale_percentage')
                                             <span class="invalid-feedback" role="alert">

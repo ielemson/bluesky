@@ -26,6 +26,8 @@
                                             class="path1"></span><span class="path2"></span></i>Active</a></li>
                             <li><a href="{{ route('admin.vendors.suspended') }}"><i class="icon-Commit"><span
                                             class="path1"></span><span class="path2"></span></i>Suspended</a></li>
+                            <li><a href="{{ route("admin.invitation.vendor-invitation-codes.index") }}"><i class="icon-Commit"><span
+                                            class="path1"></span><span class="path2"></span></i>Invitation Code</a></li>
                         </ul>
                     </li>
 

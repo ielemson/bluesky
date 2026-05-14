@@ -41,6 +41,7 @@ use App\Http\Controllers\BillingRecordController;
 use App\Http\Controllers\WithdrawalRecordController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\VendorOrderController;
+use App\Http\Controllers\Admin\VendorInvitationCodeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -100,7 +101,6 @@ Route::prefix('checkout')->group(function () {
     Route::post('/process', [CheckoutController::class, 'process'])->name('checkout.process');
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | CAPTCHA
@@ -151,6 +151,15 @@ Route::prefix('admin')->group(function () {
             Route::post('/{id}/reject', [AdminVendorController::class, 'reject'])->name('reject');
             Route::get('/{id}/details', [AdminVendorController::class, 'getVendorDetails'])->name('details');
             Route::get('/{vendor}/products', [AdminVendorController::class, 'vendorProducts'])->name('products');
+            Route::get('/{vendor}/products', [AdminVendorController::class, 'vendorProducts'])->name('products');
+            // Route::get('vendor-invitation-codes', [VendorInvitationCodeController::class, 'index'])->name("vendor-invitation-codes.index");
+            // Route::post('vendor-invitation-codes',[VendorInvitationCodeController::class, 'store'])->name("vendor-invitation-codes.store");;
+        });
+        Route::prefix('code')->name('admin.invitation.')->group(function () {
+            
+            Route::get('vendor-invitation-codes', [VendorInvitationCodeController::class, 'index'])->name("vendor-invitation-codes.index");
+            Route::get('vendor-invitation-codes/create', [VendorInvitationCodeController::class, 'create'])->name("vendor-invitation-codes.create");
+            Route::post('vendor-invitation-codes',[VendorInvitationCodeController::class, 'store'])->name("vendor-invitation-codes.store");;
         });
 
         /*
@@ -313,8 +322,8 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     Route::post('/store/apply', [VendorController::class, 'apply'])->name('vendor.apply');
 
     // Vendor products
-    Route::get('/user/products', [VendorProductController::class, 'index'])->name('customer.products.index');
-    Route::get('/user/products/category/{category}', [VendorProductController::class, 'byCategory'])->name('customer.products.byCategory');
+    Route::get('/vendor/products', [VendorProductController::class, 'index'])->name('customer.products.index');
+    Route::get('/vendor/products/category/{category}', [VendorProductController::class, 'byCategory'])->name('customer.products.byCategory');
     Route::post('/listing/add', [VendorProductController::class, 'addToListing'])->name('vendor.listing.add');
 
     // Vendor listings
@@ -362,6 +371,8 @@ Route::middleware(['auth', 'role:customer'])->group(function () {
     
     Route::get('/vendor/orders', [VendorOrderController::class, 'index'])->name('vendor.orders.index');
     Route::get('/vendor/orders/{order}', [VendorOrderController::class, 'show'])->name('vendor.orders.show');
+    Route::post('/vendor/orders/{order}/shipment', [VendorOrderController::class, 'goToShipment'])->name('vendor.orders.shipment');
+    
 
     Route::get('/user/orders', [CustomerOrderController::class, 'index'])->name('customer.orders.index');
     Route::get('/user/orders/{order}', [CustomerOrderController::class, 'show'])->name('customer.orders.show');

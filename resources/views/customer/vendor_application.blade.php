@@ -145,7 +145,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Invite Code</label>
-                                        <input type="text" name="invite_code" class="form-control"
+                                        <input type="text" name="invite_code" class="form-control" required
                                             value="{{ $vendorApplication ? $vendorApplication->invite_code : '' }}"
                                             data-parsley-required-message="Invite code is required">
                                     </div>

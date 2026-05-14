@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorProduct;
+use App\Services\UserMessageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -69,10 +70,11 @@ class AdminVendorController extends Controller
     public function show($id)
     {
         $vendor = Vendor::with([
-                'customer.wallets',
-                'user.orders' => fn($q) => $q->latest()->take(10),
-                'vendorProducts.product',
-            ])
+            'user.wallets',
+            'user.orders' => fn($q) => $q->latest()->take(10),
+            'vendorProducts.product',
+            'invitationCode',
+        ])
             ->withCount('vendorProducts')
             ->findOrFail($id);
 
@@ -92,7 +94,9 @@ class AdminVendorController extends Controller
                 return back()->with('error', 'Invalid or already processed application.');
             }
 
-            $application->update(['status' => 'approved']);
+            $application->update([
+                'status' => 'approved',
+            ]);
 
             $user = User::find($application->user_id);
 
@@ -100,7 +104,27 @@ class AdminVendorController extends Controller
                 throw new \Exception('Associated user not found.');
             }
 
-            $user->update(['is_vendor' => true]);
+            $user->update([
+                'is_vendor' => true,
+            ]);
+
+            /*
+|--------------------------------------------------------------------------
+| Send User Notification
+|--------------------------------------------------------------------------
+*/
+            UserMessageService::send(
+                userId: $user->id,
+                title: 'Vendor Application Approved',
+                message: 'Congratulations! Your vendor application has been approved successfully. You can now access your vendor dashboard and start managing your store.',
+                type: 'vendor',
+                meta: [
+                    'action' => 'vendor_approved',
+                    'vendor_id' => $application->id,
+                    'store_name' => $application->store_name,
+                    'approved_at' => now()->toDateTimeString(),
+                ]
+            );
 
             DB::commit();
 
@@ -108,15 +132,22 @@ class AdminVendorController extends Controller
                 ->route('admin.vendors.pending')
                 ->with('success', 'Vendor application approved successfully!');
         } catch (\Exception $e) {
+
             DB::rollBack();
 
-            return back()->with('error', 'Error approving application: ' . $e->getMessage());
+            return back()->with(
+                'error',
+                'Error approving application: ' . $e->getMessage()
+            );
         }
     }
 
     public function reject(Request $request, $id)
     {
         try {
+
+            DB::beginTransaction();
+
             $request->validate([
                 'rejection_reason' => 'required|string|max:500',
             ]);
@@ -124,7 +155,10 @@ class AdminVendorController extends Controller
             $application = Vendor::findOrFail($id);
 
             if ($application->status !== 'pending') {
-                return back()->with('error', 'This application has already been processed.');
+                return back()->with(
+                    'error',
+                    'This application has already been processed.'
+                );
             }
 
             $application->update([
@@ -133,11 +167,41 @@ class AdminVendorController extends Controller
                 'updated_at' => now(),
             ]);
 
+            /*
+|--------------------------------------------------------------------------
+| Send User Notification
+|--------------------------------------------------------------------------
+*/
+            UserMessageService::send(
+                userId: $application->user_id,
+                title: 'Vendor Application Rejected',
+                message: 'We regret to inform you that your vendor application was not approved. Reason: ' . $request->rejection_reason,
+                type: 'vendor',
+                meta: [
+                    'action' => 'vendor_rejected',
+                    'vendor_id' => $application->id,
+                    'store_name' => $application->store_name,
+                    'rejection_reason' => $request->rejection_reason,
+                    'rejected_at' => now()->toDateTimeString(),
+                ]
+            );
+
+            DB::commit();
+
             return redirect()
                 ->route('admin.vendors.pending')
-                ->with('success', 'Vendor application rejected successfully!');
+                ->with(
+                    'success',
+                    'Vendor application rejected successfully!'
+                );
         } catch (\Exception $e) {
-            return back()->with('error', 'Error rejecting application: ' . $e->getMessage());
+
+            DB::rollBack();
+
+            return back()->with(
+                'error',
+                'Error rejecting application: ' . $e->getMessage()
+            );
         }
     }
 

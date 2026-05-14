@@ -11,6 +11,10 @@ class UserWallet extends Model
         'user_id',
         'currency',
         'balance',
+        'account_balance',
+        'available_balance',
+        'on_hold'
+
     ];
 
     protected $casts = [
