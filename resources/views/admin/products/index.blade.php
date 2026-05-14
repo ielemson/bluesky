@@ -226,12 +226,18 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <div class="text-muted">
-                        Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} entries
-                    </div>
-                    {{ $products->links() }}
-                </div>
+               <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3 gap-2">
+
+    <div class="text-muted small text-center text-md-start">
+        Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} 
+        of {{ $products->total() }} entries
+    </div>
+
+    <div class="pagination-wrapper overflow-auto">
+        {{ $products->onEachSide(1)->links('pagination::bootstrap-5') }}
+    </div>
+
+</div>
             @else
                 <div class="text-center py-5">
                     <i class="fa fa-box-open fa-3x text-muted mb-3"></i>
