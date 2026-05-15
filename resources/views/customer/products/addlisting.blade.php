@@ -52,33 +52,8 @@
                     $product->images->count() > 0
                         ? asset($product->images->first()->image_path)
                         : 'https://via.placeholder.com/300x220?text=No+Image';
-
-                /*
-                |--------------------------------------------------------------------------
-                | SALES PRICE
-                |--------------------------------------------------------------------------
-                */
                 $salesPrice = (float) ($product->price ?? 0);
-
-                /*
-                |--------------------------------------------------------------------------
-                | SALE PERCENTAGE
-                |--------------------------------------------------------------------------
-                */
                 $salePercentage = (float) ($product->sale_percentage ?? 0);
-
-                /*
-                |--------------------------------------------------------------------------
-                | WHOLESALE PRICE
-                |--------------------------------------------------------------------------
-                | wholesale is percentage of sales price
-                |
-                | Example:
-                | salesPrice = 100
-                | salePercentage = 20
-                | wholesalePrice = 20
-                |--------------------------------------------------------------------------
-                */
                 $wholesalePrice = ($salePercentage / 100) * $salesPrice;
             @endphp
 
@@ -120,7 +95,7 @@
                         <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
 
                             <h4 class="text-blue mb-0" style="font-weight: 600;">
-                                ${{ number_format($wholesalePrice, 2) }}
+                                ${{ number_format($salesPrice, 2) }}
                             </h4>
 
                             <button type="button"
