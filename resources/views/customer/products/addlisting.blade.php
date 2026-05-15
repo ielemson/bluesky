@@ -6,6 +6,7 @@
         'header_2' => 'Products',
     ])
 @endsection
+
 <section class="content">
     <div class="row mb-4">
         <div class="col-12">
@@ -222,6 +223,7 @@
 @endpush
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script>
 $(document).on('click', '.add-to-listing', function () {
