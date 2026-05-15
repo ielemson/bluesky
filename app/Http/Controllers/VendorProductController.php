@@ -11,36 +11,44 @@ use Illuminate\Support\Facades\Auth;
 
 class VendorProductController extends Controller
 {
-    /**
-     * Display products available for vendors to add to their listing
-     */
-    public function index(Request $request)
-    {
-        // Get the selected category from request or default to all
-        $categoryId = $request->get('category_id');
+   /**
+ * Display products available for vendors to add to their listing
+ */
+public function index(Request $request)
+{
+    $categoryId = $request->get('category_id');
 
-        // Start with products available for vendors
-        $products = Product::where('is_available_for_vendors', true)
-            ->where('status', 'active') // Assuming you have a status field
-            ->with(['images' => function ($query) {
-                $query->where('is_primary', true)->orWhere('sort_order', 0);
-            }]);
+    $vendor = Vendor::where('user_id', auth()->id())->firstOrFail();
 
-        // Filter by category if selected
-        if ($categoryId) {
-            $products->where('category_id', $categoryId);
-        }
+    $products = Product::where('is_available_for_vendors', true)
+        ->where('status', 'active')
+        ->with([
+            'images' => function ($query) {
+                $query->where('is_primary', true)
+                    ->orWhere('sort_order', 0);
+            },
+            'vendorProducts' => function ($query) use ($vendor) {
+                $query->where('vendor_id', $vendor->id);
+            }
+        ]);
 
-        $products = $products->paginate(12);
-
-        // Get all active categories for filter
-        $categories = Category::where('is_active', true)
-            ->orderBy('name')
-            ->get();
-
-            // dd($products);
-        return view("customer.products.addlisting", compact('products', 'categories', 'categoryId'));
+    if ($categoryId) {
+        $products->where('category_id', $categoryId);
     }
+
+    $products = $products->paginate(12);
+
+    $categories = Category::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
+    return view("customer.products.addlisting", compact(
+        'products',
+        'categories',
+        'categoryId',
+        'vendor'
+    ));
+}
 
     /**
      * Show products by category

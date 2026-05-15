@@ -44,86 +44,106 @@
         </div>
     </div>
 
-    <div class="row">
-        @forelse($products as $product)
+  <div class="row">
 
-            @php
-                $productImage =
-                    $product->images->count() > 0
-                        ? asset($product->images->first()->image_path)
-                        : 'https://via.placeholder.com/300x220?text=No+Image';
-                $salesPrice = (float) ($product->price ?? 0);
-                $salePercentage = (float) ($product->sale_percentage ?? 0);
-                $wholesalePrice = ($salePercentage / 100) * $salesPrice;
-            @endphp
+    @forelse($products as $product)
 
-            <div class="col-12 col-lg-6 col-xl-4">
-                <div class="box">
-                    <div class="box-body">
+        @php
+            $alreadyAdded = $product->vendorProducts->isNotEmpty();
 
-                        <div class="product-img">
-                            <img src="{{ $productImage }}"
-                                alt="{{ $product->images->first()->alt_text ?? $product->name }}"
-                                class="img-fluid"
-                                style="width: 100%; height: 220px; object-fit: cover;">
-                        </div>
+            $productImage =
+                $product->images->count() > 0
+                    ? asset($product->images->first()->image_path)
+                    : 'https://via.placeholder.com/300x220?text=No+Image';
 
-                        <div class="product-text position-relative">
+            $salesPrice = (float) ($product->price ?? 0);
 
-                            <div class="pro-img-overlay">
-                                <a href="javascript:void(0)"
-                                   class="btn btn-info btn-icon-circle add-to-listing"
-                                   data-product-id="{{ $product->id }}"
-                                   data-product-name="{{ e($product->name) }}"
-                                   data-product-image="{{ $productImage }}"
-                                   data-sales-price="{{ $salesPrice }}"
-                                   data-sale-percentage="{{ $salePercentage }}"
-                                   data-wholesale-price="{{ $wholesalePrice }}">
-                                    <i class="mdi mdi-cart-plus"></i>
-                                </a>
-                            </div>
+            $salePercentage = (float) ($product->sale_percentage ?? 0);
 
-                            <h3 class="box-title mb-0">
-                                {{ Str::limit($product->name, 50) }}
-                            </h3>
+            $wholesalePrice = ($salePercentage / 100) * $salesPrice;
+        @endphp
 
-                            <small class="text-muted db">
-                                {{ Str::limit($product->short_description ?? $product->description, 80) }}
-                            </small>
-                        </div>
+        <div class="col-12 col-lg-6 col-xl-4">
+            <div class="box">
+                <div class="box-body">
 
-                        <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+                    <div class="product-img">
+                        <img src="{{ $productImage }}"
+                             alt="{{ $product->images->first()->alt_text ?? $product->name }}"
+                             class="img-fluid"
+                             style="width: 100%; height: 220px; object-fit: cover;">
+                    </div>
 
-                            <h4 class="text-blue mb-0" style="font-weight: 600;">
-                                ${{ number_format($salesPrice, 2) }}
-                            </h4>
+                    <div class="product-text position-relative">
 
-                            <button type="button"
-                                    class="btn btn-sm btn-primary add-to-listing"
-                                    data-product-id="{{ $product->id }}"
-                                    data-product-name="{{ e($product->name) }}"
-                                    data-product-image="{{ $productImage }}"
-                                    data-sales-price="{{ $salesPrice }}"
-                                    data-sale-percentage="{{ $salePercentage }}"
-                                    data-wholesale-price="{{ $wholesalePrice }}">
-                                <i class="mdi mdi-cart-plus"></i> Add
-                            </button>
+                        <div class="pro-img-overlay">
+
+                            <a href="javascript:void(0)"
+                               class="btn {{ $alreadyAdded ? 'btn-secondary' : 'btn-info' }} btn-icon-circle add-to-listing"
+                               data-product-id="{{ $product->id }}"
+                               data-product-name="{{ e($product->name) }}"
+                               data-product-image="{{ $productImage }}"
+                               data-sales-price="{{ $salesPrice }}"
+                               data-sale-percentage="{{ $salePercentage }}"
+                               data-wholesale-price="{{ $wholesalePrice }}"
+                               {{ $alreadyAdded ? 'disabled' : '' }}>
+
+                                <i class="mdi {{ $alreadyAdded ? 'mdi-check' : 'mdi-cart-plus' }}"></i>
+
+                            </a>
 
                         </div>
+
+                        <h3 class="box-title mb-0">
+                            {{ Str::limit($product->name, 50) }}
+                        </h3>
+
+                        <small class="text-muted db">
+                            {{ Str::limit($product->short_description ?? $product->description, 80) }}
+                        </small>
 
                     </div>
-                </div>
-            </div>
 
-        @empty
-            <div class="col-12">
-                <div class="alert alert-info text-center">
-                    <i class="mdi mdi-information-outline"></i>
-                    No products available for vendors at the moment.
+                    <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+
+                        <h4 class="text-blue mb-0" style="font-weight: 600;">
+                            ${{ number_format($salesPrice, 2) }}
+                        </h4>
+
+                        <button type="button"
+                                class="btn btn-sm {{ $alreadyAdded ? 'btn-secondary' : 'btn-primary' }} add-to-listing"
+                                data-product-id="{{ $product->id }}"
+                                data-product-name="{{ e($product->name) }}"
+                                data-product-image="{{ $productImage }}"
+                                data-sales-price="{{ $salesPrice }}"
+                                data-sale-percentage="{{ $salePercentage }}"
+                                data-wholesale-price="{{ $wholesalePrice }}"
+                                {{ $alreadyAdded ? 'disabled' : '' }}>
+
+                            <i class="mdi {{ $alreadyAdded ? 'mdi-check' : 'mdi-cart-plus' }}"></i>
+
+                            {{ $alreadyAdded ? 'Added' : 'Add' }}
+
+                        </button>
+
+                    </div>
+
                 </div>
             </div>
-        @endforelse
-    </div>
+        </div>
+
+    @empty
+
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="mdi mdi-information-outline"></i>
+                No products available for vendors at the moment.
+            </div>
+        </div>
+
+    @endforelse
+
+</div>>
 
     @if ($products->hasPages())
         <div class="row mt-4">
