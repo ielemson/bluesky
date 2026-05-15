@@ -38,6 +38,7 @@ class VendorProductController extends Controller
             ->orderBy('name')
             ->get();
 
+            // dd($products);
         return view("customer.products.addlisting", compact('products', 'categories', 'categoryId'));
     }
 

@@ -54,9 +54,13 @@
                     ? asset($product->images->first()->image_path)
                     : 'https://via.placeholder.com/300x220?text=No+Image';
 
-                $salesPrice = $product->price ?? 0;
-                $wholesalePrice = $product->cost_price ?? $product->price ?? 0;
-                $salePercentage = $product->sale_percentage ?? null;
+                $salesPrice = (float) ($product->price ?? 0);
+                $costPrice = (float) ($product->cost_price ?? 0);
+                $salePercentage = (float) ($product->sale_percentage ?? 0);
+
+                $wholesalePrice = $costPrice > 0
+                    ? $costPrice + (($salePercentage / 100) * $costPrice)
+                    : $salesPrice;
             @endphp
 
             <div class="col-12 col-lg-6 col-xl-4">
@@ -78,8 +82,9 @@
                                    data-product-name="{{ e($product->name) }}"
                                    data-product-image="{{ $productImage }}"
                                    data-sales-price="{{ $salesPrice }}"
-                                   data-wholesale-price="{{ $wholesalePrice }}"
-                                   data-sale-percentage="{{ $salePercentage }}">
+                                   data-cost-price="{{ $costPrice }}"
+                                   data-sale-percentage="{{ $salePercentage }}"
+                                   data-wholesale-price="{{ $wholesalePrice }}">
                                     <i class="mdi mdi-cart-plus"></i>
                                 </a>
                             </div>
@@ -104,8 +109,9 @@
                                     data-product-name="{{ e($product->name) }}"
                                     data-product-image="{{ $productImage }}"
                                     data-sales-price="{{ $salesPrice }}"
-                                    data-wholesale-price="{{ $wholesalePrice }}"
-                                    data-sale-percentage="{{ $salePercentage }}">
+                                    data-cost-price="{{ $costPrice }}"
+                                    data-sale-percentage="{{ $salePercentage }}"
+                                    data-wholesale-price="{{ $wholesalePrice }}">
                                 <i class="mdi mdi-cart-plus"></i> Add
                             </button>
                         </div>
@@ -136,7 +142,6 @@
 </section>
 
 @endsection
-
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
@@ -203,6 +208,7 @@
 
 <script>
 $(document).on('click', '.add-to-listing', function () {
+
     const button = $(this);
 
     const productId = button.data('product-id');
@@ -210,8 +216,24 @@ $(document).on('click', '.add-to-listing', function () {
     const productImage = button.data('product-image');
 
     const salesPrice = parseFloat(button.data('sales-price')) || 0;
-    const wholesalePrice = parseFloat(button.data('wholesale-price')) || 0;
-    const salePercentage = button.data('sale-percentage');
+    const costPrice = parseFloat(button.data('cost-price')) || 0;
+    const salePercentage = parseFloat(button.data('sale-percentage')) || 0;
+
+    /*
+    |--------------------------------------------------------------------------
+    | WHOLESALE CALCULATION
+    |--------------------------------------------------------------------------
+    | wholesale = cost price + percentage profit on cost price
+    |
+    | Example:
+    | cost = 100
+    | percentage = 20
+    | wholesale = 120
+    |--------------------------------------------------------------------------
+    */
+    const wholesalePrice = costPrice > 0
+        ? costPrice + ((salePercentage / 100) * costPrice)
+        : salesPrice;
 
     const formattedSalesPrice = salesPrice.toLocaleString(undefined, {
         minimumFractionDigits: 2,
@@ -222,8 +244,6 @@ $(document).on('click', '.add-to-listing', function () {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
-
-    const profitText = '';
 
     Swal.fire({
         width: 560,
@@ -240,8 +260,11 @@ $(document).on('click', '.add-to-listing', function () {
         },
         html: `
             <div class="listing-confirm-box">
+
                 <div class="listing-confirm-header">
-                    <img src="${productImage}" alt="${productName}" class="listing-confirm-img">
+                    <img src="${productImage}" 
+                         alt="${productName}" 
+                         class="listing-confirm-img">
 
                     <div class="listing-confirm-title">
                         ${productName}
@@ -251,16 +274,26 @@ $(document).on('click', '.add-to-listing', function () {
                 <hr>
 
                 <div class="listing-confirm-prices">
-                    <p>Sales Price: <span>$${formattedSalesPrice}</span></p>
-                    <p>Wholesale Price: <span>$${formattedWholesalePrice}</span></p>
+                    <p>
+                        Sales Price:
+                        <span>$${formattedSalesPrice}</span>
+                    </p>
+
+                    <p>
+                        Wholesale Price:
+                        <span>$${formattedWholesalePrice}</span>
+                    </p>
                 </div>
+
             </div>
         `,
+
         preConfirm: () => {
+
             const originalHtml = button.html();
 
             button.prop('disabled', true)
-                .html('<i class="mdi mdi-loading mdi-spin"></i>');
+                  .html('<i class="mdi mdi-loading mdi-spin"></i>');
 
             return $.ajax({
                 url: '{{ route('vendor.listing.add') }}',
@@ -269,16 +302,27 @@ $(document).on('click', '.add-to-listing', function () {
                     product_id: productId,
                     _token: '{{ csrf_token() }}'
                 }
-            }).then(function (response) {
+            })
+            .then(function (response) {
+
                 if (!response.success) {
-                    button.prop('disabled', false).html(originalHtml);
-                    Swal.showValidationMessage(response.message || 'Unable to add product.');
+
+                    button.prop('disabled', false)
+                          .html(originalHtml);
+
+                    Swal.showValidationMessage(
+                        response.message || 'Unable to add product.'
+                    );
+
                     return false;
                 }
 
                 return response;
-            }).catch(function (xhr) {
-                button.prop('disabled', false).html(originalHtml);
+            })
+            .catch(function (xhr) {
+
+                button.prop('disabled', false)
+                      .html(originalHtml);
 
                 let message = 'Error adding product to listing. Please try again.';
 
@@ -287,15 +331,19 @@ $(document).on('click', '.add-to-listing', function () {
                 }
 
                 Swal.showValidationMessage(message);
+
                 return false;
             });
         }
-    }).then((result) => {
+    })
+    .then((result) => {
+
         if (result.isConfirmed && result.value && result.value.success) {
+
             button.removeClass('btn-primary btn-info')
-                .addClass('btn-secondary')
-                .html('<i class="mdi mdi-check"></i> Added')
-                .prop('disabled', true);
+                  .addClass('btn-secondary')
+                  .html('<i class="mdi mdi-check"></i> Added')
+                  .prop('disabled', true);
 
             Swal.fire({
                 icon: 'success',
