@@ -1,16 +1,12 @@
 @extends('layouts.customer')
-
 @section('content')
-
 @section('content_header')
     @include('customer.partials.content_header', [
         'header_1' => Auth()->user()->nickname,
-        'header_2' => 'Products'
+        'header_2' => 'Products',
     ])
 @endsection
-
 <section class="content">
-
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow">
@@ -49,18 +45,40 @@
 
     <div class="row">
         @forelse($products as $product)
-            @php
-                $productImage = $product->images->count() > 0
-                    ? asset($product->images->first()->image_path)
-                    : 'https://via.placeholder.com/300x220?text=No+Image';
 
+            @php
+                $productImage =
+                    $product->images->count() > 0
+                        ? asset($product->images->first()->image_path)
+                        : 'https://via.placeholder.com/300x220?text=No+Image';
+
+                /*
+                |--------------------------------------------------------------------------
+                | SALES PRICE
+                |--------------------------------------------------------------------------
+                */
                 $salesPrice = (float) ($product->price ?? 0);
-                $costPrice = (float) ($product->cost_price ?? 0);
+
+                /*
+                |--------------------------------------------------------------------------
+                | SALE PERCENTAGE
+                |--------------------------------------------------------------------------
+                */
                 $salePercentage = (float) ($product->sale_percentage ?? 0);
 
-                $wholesalePrice = $costPrice > 0
-                    ? $costPrice + (($salePercentage / 100) * $costPrice)
-                    : $salesPrice;
+                /*
+                |--------------------------------------------------------------------------
+                | WHOLESALE PRICE
+                |--------------------------------------------------------------------------
+                | wholesale is percentage of sales price
+                |
+                | Example:
+                | salesPrice = 100
+                | salePercentage = 20
+                | wholesalePrice = 20
+                |--------------------------------------------------------------------------
+                */
+                $wholesalePrice = ($salePercentage / 100) * $salesPrice;
             @endphp
 
             <div class="col-12 col-lg-6 col-xl-4">
@@ -69,12 +87,13 @@
 
                         <div class="product-img">
                             <img src="{{ $productImage }}"
-                                 alt="{{ $product->images->first()->alt_text ?? $product->name }}"
-                                 class="img-fluid"
-                                 style="width: 100%; height: 220px; object-fit: cover;">
+                                alt="{{ $product->images->first()->alt_text ?? $product->name }}"
+                                class="img-fluid"
+                                style="width: 100%; height: 220px; object-fit: cover;">
                         </div>
 
                         <div class="product-text position-relative">
+
                             <div class="pro-img-overlay">
                                 <a href="javascript:void(0)"
                                    class="btn btn-info btn-icon-circle add-to-listing"
@@ -82,7 +101,6 @@
                                    data-product-name="{{ e($product->name) }}"
                                    data-product-image="{{ $productImage }}"
                                    data-sales-price="{{ $salesPrice }}"
-                                   data-cost-price="{{ $costPrice }}"
                                    data-sale-percentage="{{ $salePercentage }}"
                                    data-wholesale-price="{{ $wholesalePrice }}">
                                     <i class="mdi mdi-cart-plus"></i>
@@ -99,6 +117,7 @@
                         </div>
 
                         <div class="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
+
                             <h4 class="text-blue mb-0" style="font-weight: 600;">
                                 ${{ number_format($wholesalePrice, 2) }}
                             </h4>
@@ -109,16 +128,17 @@
                                     data-product-name="{{ e($product->name) }}"
                                     data-product-image="{{ $productImage }}"
                                     data-sales-price="{{ $salesPrice }}"
-                                    data-cost-price="{{ $costPrice }}"
                                     data-sale-percentage="{{ $salePercentage }}"
                                     data-wholesale-price="{{ $wholesalePrice }}">
                                 <i class="mdi mdi-cart-plus"></i> Add
                             </button>
+
                         </div>
 
                     </div>
                 </div>
             </div>
+
         @empty
             <div class="col-12">
                 <div class="alert alert-info text-center">
@@ -138,18 +158,16 @@
             </div>
         </div>
     @endif
-
 </section>
 
 @endsection
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-
 <style>
-   .vendor-listing-modal {
-    border-radius: 12px !important;
-    padding: 18px 20px !important;
-}
+    .vendor-listing-modal {
+        border-radius: 12px !important;
+        padding: 18px 20px !important;
+    }
 
     .listing-confirm-box {
         text-align: left;
@@ -202,7 +220,6 @@
     }
 </style>
 @endpush
-
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -216,24 +233,16 @@ $(document).on('click', '.add-to-listing', function () {
     const productImage = button.data('product-image');
 
     const salesPrice = parseFloat(button.data('sales-price')) || 0;
-    const costPrice = parseFloat(button.data('cost-price')) || 0;
     const salePercentage = parseFloat(button.data('sale-percentage')) || 0;
 
     /*
     |--------------------------------------------------------------------------
     | WHOLESALE CALCULATION
     |--------------------------------------------------------------------------
-    | wholesale = cost price + percentage profit on cost price
-    |
-    | Example:
-    | cost = 100
-    | percentage = 20
-    | wholesale = 120
+    | wholesale is percentage of sales price
     |--------------------------------------------------------------------------
     */
-    const wholesalePrice = costPrice > 0
-        ? costPrice + ((salePercentage / 100) * costPrice)
-        : salesPrice;
+    const wholesalePrice = (salePercentage / 100) * salesPrice;
 
     const formattedSalesPrice = salesPrice.toLocaleString(undefined, {
         minimumFractionDigits: 2,
@@ -258,6 +267,7 @@ $(document).on('click', '.add-to-listing', function () {
             confirmButton: 'vendor-confirm-btn',
             cancelButton: 'vendor-cancel-btn'
         },
+
         html: `
             <div class="listing-confirm-box">
 
@@ -303,6 +313,7 @@ $(document).on('click', '.add-to-listing', function () {
                     _token: '{{ csrf_token() }}'
                 }
             })
+
             .then(function (response) {
 
                 if (!response.success) {
@@ -319,6 +330,7 @@ $(document).on('click', '.add-to-listing', function () {
 
                 return response;
             })
+
             .catch(function (xhr) {
 
                 button.prop('disabled', false)
@@ -336,6 +348,7 @@ $(document).on('click', '.add-to-listing', function () {
             });
         }
     })
+
     .then((result) => {
 
         if (result.isConfirmed && result.value && result.value.success) {
